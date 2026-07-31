@@ -13,6 +13,7 @@ import { DataBackup } from './DataBackup';
 import { RevenueSimulator, RuntimeCalculator } from './RevenueSimulator';
 import { IntroScorer, NicheAdvisor } from './IntroScorer';
 import { ThumbnailPreview } from './ThumbnailPreview';
+import { OpsFacts } from './OpsFacts';
 import {
   ChannelTracker,
   CostCalculator,
@@ -76,6 +77,16 @@ function renderWidget(widget: StepWidget) {
       return <NicheAdvisor key={widget} />;
     case 'thumbnailPreview':
       return <ThumbnailPreview key={widget} />;
+    case 'opsFacts':
+      return <OpsFacts key={widget} />;
+    case 'opsTax':
+      return <OpsFacts key={widget} only="세무" />;
+    case 'opsCopyright':
+      return <OpsFacts key={widget} only="저작권" />;
+    case 'opsUpload':
+      return <OpsFacts key={widget} only="업로드 운영" />;
+    case 'opsMidroll':
+      return <OpsFacts key={widget} only="중간광고" />;
     default:
       return null;
   }

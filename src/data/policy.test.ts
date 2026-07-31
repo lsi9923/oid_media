@@ -233,8 +233,29 @@ describe('워크플로우 통합', () => {
     expect(s?.widgets).toContain('episodeHistory');
   });
 
-  it('전체 단계가 30개다', () => {
-    expect(STEPS).toHaveLength(30);
+  it('전체 단계가 31개다', () => {
+    expect(STEPS).toHaveLength(31);
+  });
+
+  it('세무·저작권 단계가 업로드 페이즈에 있다', () => {
+    const s = findStep('publish-ops');
+    expect(s).toBeDefined();
+    expect(s?.phaseId).toBe('publish');
+    expect(s?.widgets).toContain('opsTax');
+    expect(s?.widgets).toContain('opsCopyright');
+  });
+
+  it('업로드 단계가 빨간 슬롯 확인을 요구한다', () => {
+    const s = findStep('publish-upload');
+    expect(s?.checklist.some((c) => c.id === 'slots')).toBe(true);
+    expect(s?.widgets).toContain('opsUpload');
+  });
+
+  it('손익 단계가 슬롯 수 과대추정을 경고한다', () => {
+    const s = findStep('decide-economics');
+    const warn = s?.checklist.find((c) => c.id === 'slot-caveat');
+    expect(warn).toBeDefined();
+    expect(warn?.warning).toMatch(/not guaranteed|과대추정/);
   });
 
   it('페이즈가 9개다', () => {

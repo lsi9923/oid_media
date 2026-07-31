@@ -2223,6 +2223,134 @@ select.field__input {
   color: var(--text-dim);
 }
 
+/* ─────────────────────────── 운영 실무 ─────────────────────────── */
+.ops-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ops {
+  padding: 0.75rem 0.85rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.ops--official {
+  border-left-color: var(--ok);
+}
+.ops--reported {
+  border-left-color: var(--med);
+}
+.ops--inferred {
+  border-left-color: var(--text-faint);
+}
+
+.ops__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.ops__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+}
+.ops__body {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.ops__action {
+  margin: 0 0 0.35rem;
+  padding: 0.45rem 0.6rem;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  border-radius: var(--radius-sm);
+  font-size: 0.83rem;
+}
+.ops__action strong {
+  color: var(--accent);
+  margin-right: 0.2rem;
+}
+.ops__risk {
+  margin: 0 0 0.35rem;
+  padding: 0.45rem 0.6rem;
+  background: color-mix(in srgb, var(--warn) 8%, var(--bg));
+  border-radius: var(--radius-sm);
+  font-size: 0.83rem;
+}
+.ops__risk strong {
+  color: var(--warn);
+  margin-right: 0.2rem;
+}
+.ops__source {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+/* ─────────────────────────── 니치 점수 분해 ─────────────────────────── */
+.score-break {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.score-break__item {
+  display: grid;
+  grid-template-columns: 11rem 1fr 3.2rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+.score-break__label {
+  color: var(--text-faint);
+}
+.score-break__bar {
+  height: 6px;
+  background: var(--bg-elev-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.score-break__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+.score-break__num {
+  text-align: right;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ev {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .score-break__item {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+  .score-break__num {
+    text-align: left;
+  }
+}
+
 /* ─────────────────────────── 푸터 ─────────────────────────── */
 .footer {
   border-top: 1px solid var(--border);

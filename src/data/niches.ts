@@ -14,6 +14,19 @@
 /** 정책 적합성 판정 */
 export type PolicyFit = 'safe' | 'caution' | 'blocked';
 
+/**
+ * 판정의 근거 수준.
+ * 이 데이터의 상당 부분은 공식 통계가 없어 추론이 섞여 있다.
+ * 사용자가 무엇을 믿을지 판단할 수 있게 수준을 밝힌다.
+ */
+export type EvidenceLevel = 'official' | 'reported' | 'inferred';
+
+export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
+  official: '공식 문서',
+  reported: '보도·발언',
+  inferred: '추론',
+};
+
 export interface NicheOption {
   id: string;
   name: string;
@@ -25,12 +38,17 @@ export interface NicheOption {
   policyFit: PolicyFit;
   /** 정책 판단 근거 */
   policyReason: string;
+  /** 정책 판정의 근거 수준 */
+  policyEvidence: EvidenceLevel;
   /** 포화도 — 이 방식으로 만든 채널이 얼마나 많은가 */
   saturation: '매우 높음' | '높음' | '보통' | '낮음';
   saturationReason: string;
+  /** 포화도 판정의 근거 수준 */
+  saturationEvidence: EvidenceLevel;
   /** 광고 단가 성향 */
   rpmTier: '낮음' | '보통' | '높음';
   rpmReason: string;
+  rpmEvidence: EvidenceLevel;
   /** 주 시청층 */
   audience: string;
   /** 이 니치를 고를 때 유의할 점 */
@@ -53,6 +71,9 @@ export const NICHES: NicheOption[] = [
     rpmReason:
       '엔터테인먼트 분류. 50~70대 한국 시청자 위주여서 광고주 경쟁이 약하다. 한국 CPM은 미국의 약 4분의 1이다.',
     audience: '50~70대, 배경 청취',
+    policyEvidence: 'official',
+    saturationEvidence: 'reported',
+    rpmEvidence: 'reported',
     caveats: [
       '지금 진입하면 이미 같은 형식의 채널이 많다. 차별점을 만들지 않으면 묻힌다.',
       '골격·결말·조력자를 매 영상 바꾸지 않으면 수익화가 막힐 수 있다.',
@@ -73,6 +94,9 @@ export const NICHES: NicheOption[] = [
     rpmTier: '보통',
     rpmReason: '교육·역사 성향이 섞이면 광고 단가가 순수 엔터테인먼트보다 높은 경향이 있다.',
     audience: '40~70대, 해당 지역 연고자',
+    policyEvidence: 'inferred',
+    saturationEvidence: 'inferred',
+    rpmEvidence: 'inferred',
     caveats: [
       '조사가 필요하다. 대본을 AI에 전부 맡길 수 없다.',
       '실제 지명·인물이 나오므로 사실 확인이 필요하다. 틀리면 정정 요구가 온다.',
@@ -92,6 +116,9 @@ export const NICHES: NicheOption[] = [
     rpmTier: '높음',
     rpmReason: '교육 분류에 가까울수록 광고 단가가 높다. 조사 자료에서 교육 니치가 가장 높았다.',
     audience: '30~60대, 남성 비중 높음',
+    policyEvidence: 'inferred',
+    saturationEvidence: 'inferred',
+    rpmEvidence: 'reported',
     caveats: [
       '사실 확인이 필수다. 틀린 역사를 퍼뜨리면 신뢰를 잃고 정정 요구가 온다.',
       '실존 인물 명예에 관한 서술은 조심해야 한다.',
@@ -111,6 +138,9 @@ export const NICHES: NicheOption[] = [
     rpmTier: '보통',
     rpmReason: '시청층이 넓어 민담보다는 낫지만 자극적 소재는 광고 적합성에서 불이익을 받는다.',
     audience: '30~60대, 여성 비중 높음',
+    policyEvidence: 'official',
+    saturationEvidence: 'inferred',
+    rpmEvidence: 'inferred',
     caveats: [
       '실제 인물을 특정할 수 있는 정보를 넣으면 안 된다.',
       '자극만으로 조회수를 끌면 광고 적합성 제한을 받는다.',
@@ -130,6 +160,9 @@ export const NICHES: NicheOption[] = [
     rpmTier: '낮음',
     rpmReason: '수익화 자체가 어려우므로 단가를 논하기 이전 문제다.',
     audience: '전 연령',
+    policyEvidence: 'official',
+    saturationEvidence: 'inferred',
+    rpmEvidence: 'inferred',
     caveats: [
       '원문 낭독만으로는 수익화가 안 된다. 해설·비평·각색이 실질적으로 들어가야 한다.',
       '저작권이 살아 있는 번역본을 쓰면 저작권 문제가 별도로 생긴다.',
@@ -148,6 +181,9 @@ export const NICHES: NicheOption[] = [
     rpmTier: '높음',
     rpmReason: '단가는 높지만 수익화가 막히므로 의미가 없다.',
     audience: '50대 이상',
+    policyEvidence: 'official',
+    saturationEvidence: 'inferred',
+    rpmEvidence: 'reported',
     caveats: [
       'AI 음성으로 건강 조언을 하는 것은 정책상 수익화 불가다. 시도하지 않는 편이 낫다.',
       '의료 오정보는 정책 위반을 넘어 실제 피해를 낼 수 있다.',
@@ -166,6 +202,9 @@ export const NICHES: NicheOption[] = [
     rpmTier: '보통',
     rpmReason: '교육·라이프스타일 성향. 엔터테인먼트보다 높은 편이다.',
     audience: '40~70대',
+    policyEvidence: 'inferred',
+    saturationEvidence: 'inferred',
+    rpmEvidence: 'inferred',
     caveats: [
       '조사가 필요하다. AI에 전부 맡기면 틀린 정보가 섞인다.',
       '이야기보다 정보 전달이므로 시청 지속시간을 확보하기가 더 어렵다.',
@@ -174,16 +213,42 @@ export const NICHES: NicheOption[] = [
   },
 ];
 
-/** 니치 비교 점수. 높으면 지금 진입하기 유리하다 */
+/**
+ * 니치 비교 점수.
+ *
+ * ⚠ 이 점수는 객관적 지표가 아니다. 저자가 정한 가중치로 계산한 편의적 종합값이다.
+ * 가중치의 근거는 없다. 아래 비중이 타당하다고 볼 이유도, 아니라고 볼 이유도 있다.
+ *
+ * 그래서 두 가지를 함께 제공한다.
+ *   1. 가중치를 숨기지 않고 밝힌다 (SCORE_WEIGHTS를 UI에 노출)
+ *   2. 세 축의 원래 판정을 그대로 보여줘 사용자가 직접 판단할 수 있게 한다
+ *
+ * 점수만 보고 결정하지 말고 세 축과 근거 수준을 함께 보라는 뜻이다.
+ */
 export interface NicheScore {
   niche: NicheOption;
-  /** 0~100. 정책 안전성 + 낮은 포화도 + 단가를 종합 */
+  /** 0~100. 편의적 종합값이며 객관적 지표가 아니다 */
   score: number;
+  /** 축별 획득 점수. 어디서 점수가 깎였는지 보이게 한다 */
+  breakdown: { policy: number; saturation: number; rpm: number };
   /** 진입을 권하는지 */
   recommendation: '권장' | '조건부' | '비권장';
   /** 왜 그런지 한 줄 */
   summary: string;
+  /** 이 판정에서 가장 약한 근거 수준 */
+  weakestEvidence: EvidenceLevel;
 }
+
+/** 가중치. UI에 그대로 표시해 임의성을 숨기지 않는다 */
+export const SCORE_WEIGHTS = {
+  policy: { max: 40, label: '정책 안전성' },
+  saturation: { max: 35, label: '경쟁 강도(낮을수록 높은 점수)' },
+  rpm: { max: 25, label: '광고 단가' },
+} as const;
+
+export const SCORE_DISCLAIMER =
+  '이 점수는 정책 안전성 40점, 경쟁 강도 35점, 광고 단가 25점으로 가중한 편의적 종합값입니다. ' +
+  '가중치는 저자가 정한 것이며 객관적 근거가 없습니다. 점수만 보지 말고 세 축과 근거 수준을 함께 보세요.';
 
 const POLICY_WEIGHT: Record<PolicyFit, number> = { safe: 40, caution: 20, blocked: 0 };
 const SATURATION_WEIGHT: Record<NicheOption['saturation'], number> = {
@@ -194,8 +259,20 @@ const SATURATION_WEIGHT: Record<NicheOption['saturation'], number> = {
 };
 const RPM_WEIGHT: Record<NicheOption['rpmTier'], number> = { 높음: 25, 보통: 16, 낮음: 7 };
 
+/** 근거 수준을 약한 순으로 */
+const EVIDENCE_RANK: Record<EvidenceLevel, number> = { inferred: 0, reported: 1, official: 2 };
+
 export function scoreNiche(n: NicheOption): NicheScore {
-  const score = POLICY_WEIGHT[n.policyFit] + SATURATION_WEIGHT[n.saturation] + RPM_WEIGHT[n.rpmTier];
+  const breakdown = {
+    policy: POLICY_WEIGHT[n.policyFit],
+    saturation: SATURATION_WEIGHT[n.saturation],
+    rpm: RPM_WEIGHT[n.rpmTier],
+  };
+  const score = breakdown.policy + breakdown.saturation + breakdown.rpm;
+
+  const weakestEvidence = (
+    [n.policyEvidence, n.saturationEvidence, n.rpmEvidence] as EvidenceLevel[]
+  ).reduce((weakest, e) => (EVIDENCE_RANK[e] < EVIDENCE_RANK[weakest] ? e : weakest), 'official');
 
   let recommendation: NicheScore['recommendation'];
   let summary: string;
@@ -214,7 +291,12 @@ export function scoreNiche(n: NicheOption): NicheScore {
     summary = '포화됐거나 단가가 낮습니다. 같은 노력으로 다른 니치가 낫습니다.';
   }
 
-  return { niche: n, score, recommendation, summary };
+  // 근거가 추론뿐이면 판정을 그대로 믿지 말라고 덧붙인다
+  if (weakestEvidence === 'inferred' && n.policyFit !== 'blocked') {
+    summary += ' 다만 이 판정의 근거 일부는 추론입니다.';
+  }
+
+  return { niche: n, score, breakdown, recommendation, summary, weakestEvidence };
 }
 
 /** 점수 높은 순으로 정렬해 반환 */

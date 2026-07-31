@@ -3,9 +3,12 @@ import {
   calcRevenue,
   estimateRuntime,
   formatRuntime,
+  MIDROLL_FACTS,
   planForTarget,
+  RPM_BASIS_LABEL,
   RPM_SCENARIOS,
   TTS_SPEED,
+  TTS_SPEED_META,
   type TtsSpeed,
 } from '../lib/revenue';
 import { formatKrw } from '../lib/text';
@@ -59,7 +62,7 @@ export function RevenueSimulator() {
         계산하세요. RPM은 아래 시나리오 버튼으로 바꿔 볼 수 있습니다.
       </p>
 
-      <div className="seg" style={{ marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <div className="seg" style={{ marginBottom: '0.5rem', flexWrap: 'wrap' }}>
         {RPM_SCENARIOS.map((s) => (
           <button
             key={s.id}
@@ -72,6 +75,16 @@ export function RevenueSimulator() {
           </button>
         ))}
       </div>
+      {/* 선택한 시나리오의 근거를 항상 보여준다 */}
+      {(() => {
+        const sel = RPM_SCENARIOS.find((s) => String(s.rpmKrw) === rpm);
+        if (!sel) return null;
+        return (
+          <p className={`alert ${sel.basis === 'claim' ? 'alert--warn' : 'alert--info'}`}>
+            <strong>{RPM_BASIS_LABEL[sel.basis]}</strong> — {sel.note}
+          </p>
+        );
+      })()}
 
       <div className="draft-grid">
         <Field label="월 제작 편수" type="number" value={videos} onChange={setVideos} />
@@ -180,6 +193,11 @@ export function RevenueSimulator() {
         강의 사례(조회수 6만에 80만원)는 RPM 약 13,000원에 해당합니다. 한국 시청자 기반
         엔터테인먼트 콘텐츠에서 일반적인 수준이 아닙니다. 시나리오 버튼으로 두 경우를 비교해 보세요.
       </p>
+
+      <p className="alert alert--info">
+        <strong>실제 RPM은 자기 채널에서 확인하세요.</strong> YouTube Studio → 분석 → 수익 항목에
+        실측치가 나옵니다. 위 시나리오는 공개 자료에서 도출한 참고 구간이며, 채널마다 크게 다릅니다.
+      </p>
     </section>
   );
 }
@@ -276,6 +294,22 @@ export function RuntimeCalculator() {
           최소 8분을 넘기세요.
         </p>
       )}
+
+      <p className="alert alert--warn">
+        <strong>슬롯 개수를 수익으로 환산하지 마세요.</strong> {MIDROLL_FACTS.notGuaranteed}{' '}
+        {MIDROLL_FACTS.intervalIsEstimate}
+      </p>
+
+      <p className="alert alert--info">
+        {MIDROLL_FACTS.ttsRisk} {MIDROLL_FACTS.qualityFeedback}{' '}
+        <a href={MIDROLL_FACTS.sourceUrl} target="_blank" rel="noreferrer noopener">
+          공식 문서 ↗
+        </a>
+      </p>
+
+      <p className="alert alert--info">
+        낭독 속도 {TTS_SPEED[speed]}자/초는 {TTS_SPEED_META.note} {TTS_SPEED_META.howToMeasure}
+      </p>
     </section>
   );
 }

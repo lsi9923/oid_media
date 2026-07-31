@@ -96,8 +96,19 @@ export const STEPS: Step[] = [
         warning: '편당 원가는 1~2천원이지만 사람 시간은 공짜가 아니다.',
       },
       { id: 'runtime', label: '러닝타임과 중간광고 슬롯을 확인했다' },
+      {
+        id: 'slot-caveat',
+        label: '슬롯 개수가 수익을 보장하지 않는다는 점을 확인했다',
+        warning:
+          'YouTube 공식 문구: Ad slots are not guaranteed to serve ads. 슬롯 수 × RPM으로 계산하면 크게 과대추정한다.',
+      },
+      {
+        id: 'cost',
+        label: '최소 구성으로 시작할지 검토했다',
+        warning: '첫 달은 Claude만으로 시작할 수 있다. 필요해지면 늘리는 편이 낫다.',
+      },
     ],
-    widgets: ['revenueSimulator', 'runtimeCalculator'],
+    widgets: ['revenueSimulator', 'runtimeCalculator', 'opsMidroll'],
   },
   {
     id: 'decide-niche',
@@ -974,7 +985,22 @@ export const STEPS: Step[] = [
       { id: 'video', label: '영상 업로드' },
       { id: 'thumb', label: '썸네일 JPG 지정' },
       { id: 'ads', label: '중간광고 활성화' },
+      {
+        id: 'slots',
+        label: '업로드 한 시간 뒤 빨간 슬롯을 확인해 옮겼다',
+        warning: 'Studio가 게재 가능성 낮은 슬롯을 빨간색으로 표시한다. TTS 낭독은 자연 중단점이 적어 잘 걸린다.',
+      },
+      {
+        id: 'meta',
+        label: '제목·설명을 이전 영상과 다르게 썼다',
+        warning: '리뷰어가 메타데이터를 확인한다. 템플릿을 복사해 숫자만 바꾸면 바로 걸린다.',
+      },
+      {
+        id: 'desc-ai',
+        label: '설명란에 AI 활용 사실을 적었다',
+      },
     ],
+    widgets: ['opsUpload'],
   },
   {
     id: 'publish-scale',
@@ -1006,6 +1032,48 @@ export const STEPS: Step[] = [
       { id: 'backup', label: '작업 내용 백업' },
     ],
     widgets: ['channelTracker', 'episodeHistory', 'dataBackup'],
+  },
+  {
+    id: 'publish-ops',
+    phaseId: 'publish',
+    title: '세무 · 저작권 정리',
+    summary:
+      '수익이 나기 시작하면 필요한 것들입니다. 강의가 다루지 않는 영역이고, 놓치면 가산세나 저작권 문제가 생깁니다.',
+    timestamp: '48:23',
+    tools: [],
+    duration: '30분',
+    keyPoint:
+      '유튜브 수익은 사업소득입니다. 부가가치세법은 사업 개시일부터 20일 이내에 사업자등록을 신청하도록 정하고 있습니다. 그리고 민담 줄거리는 자유롭게 쓸 수 있지만 학자가 채록한 문장은 별개의 저작물입니다.',
+    actions: [
+      '수익 창출이 승인되면 사업자등록 시점을 확인한다.',
+      'AI 도구 결제를 카드 하나로 모아 경비 증빙을 확보한다.',
+      'AdSense 지급 명세를 매달 내려받아 보관한다.',
+      '영상별로 어떤 원천 자료를 어떻게 썼는지 기록해 둔다.',
+      '설명란에 AI 활용 사실을 한 줄 적는다.',
+    ],
+    checklist: [
+      {
+        id: 'reg',
+        label: '사업자등록 시점을 확인했다',
+        warning: '사업 개시일부터 20일 이내. 늦으면 가산세가 붙는다.',
+      },
+      {
+        id: 'card',
+        label: 'AI 도구 결제를 한 카드로 모았다',
+        warning: '개인 카드와 섞이면 월 8만원을 경비로 넣기 어려워진다.',
+      },
+      {
+        id: 'adsense',
+        label: 'AdSense 지급 명세를 보관하기로 했다',
+        warning: '구글 수익은 국내 원천징수 자료가 없어도 스스로 신고해야 한다.',
+      },
+      {
+        id: 'source',
+        label: '원천 자료 사용 방식을 기록하기로 했다',
+        warning: '채록본 문장을 그대로 쓰면 저작권 침해이며 재사용 콘텐츠 정책에도 걸린다.',
+      },
+    ],
+    widgets: ['opsTax', 'opsCopyright'],
   },
 ];
 

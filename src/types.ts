@@ -60,7 +60,12 @@ export type StepWidget =
   | 'runtimeCalculator'
   | 'introScorer'
   | 'nicheAdvisor'
-  | 'thumbnailPreview';
+  | 'thumbnailPreview'
+  | 'opsFacts'
+  | 'opsTax'
+  | 'opsCopyright'
+  | 'opsUpload'
+  | 'opsMidroll';
 
 /** 워크플로우 한 단계 */
 export interface Step {

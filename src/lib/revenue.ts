@@ -13,15 +13,30 @@
  */
 
 /**
- * 한국어 TTS 낭독 속도 (초당 글자수).
+ * 한국어 TTS 낭독 속도 (초당 글자수, 공백 포함).
  *
- * 공백 포함 기준. Vrew 기본 속도에서 측정되는 일반적 범위다.
- * 50~70대 시청층을 겨냥하면 느린 쪽을 택하는 편이 낫다.
+ * ⚠ 이 값은 실측 데이터가 아니라 추정치다.
+ * 저자가 Vrew 기본 속도를 기준으로 잡은 값이며, 공식 문서나 논문 근거가 없다.
+ * TTS 엔진, 목소리, 속도 설정, 문장 구조에 따라 크게 달라진다.
+ *
+ * 정확한 값이 필요하면 직접 측정해야 한다.
+ *   1. Vrew에 1,000자를 넣어 렌더링한다
+ *   2. 결과 영상 길이(초)를 1,000으로 나눈다
+ *   3. 세 번 반복해 평균을 낸다
+ * 앱의 UI에서 이 값을 직접 바꿀 수 있게 해둔 이유가 이것이다.
  */
 export const TTS_SPEED = {
   slow: 4.0,
   normal: 4.8,
   fast: 5.6,
+} as const;
+
+/** 추정치의 신뢰 수준을 UI에 알리기 위한 메타데이터 */
+export const TTS_SPEED_META = {
+  confidence: 'estimate' as const,
+  note: '실측이 아닌 추정치입니다. TTS 엔진과 속도 설정에 따라 20% 이상 차이날 수 있습니다.',
+  howToMeasure:
+    'Vrew에 1,000자를 넣어 렌더링하고, 결과 길이(초)를 1,000으로 나누면 실제 값이 나옵니다.',
 } as const;
 
 export type TtsSpeed = keyof typeof TTS_SPEED;
@@ -68,17 +83,50 @@ export function formatRuntime(seconds: number): string {
 /**
  * 중간광고 슬롯 개수를 추정한다.
  *
- * YouTube 공식: 8분 이상이면 중간광고를 넣을 수 있다.
- * 슬롯 개수 상한은 공식 문서에 명시가 없고 자동 배치는 시스템이 결정한다.
- * 실제 서빙 간격은 대체로 3~5분 사이로 보고되므로 4분을 기준으로 잡는다.
- * 추정치이며 실제 수익과 다를 수 있다.
+ * ⚠ 중요한 한계가 있다. 이 함수는 "넣을 수 있는 슬롯의 대략적 상한"만 센다.
+ * 실제 광고 게재 수와는 다르다. YouTube 공식 문서의 원문은 이렇다.
+ *
+ *   "Ad slots are not guaranteed to serve ads. Our ad systems decide which ad
+ *    slots may get an ad based on a number of factors to best balance viewer
+ *    experience, creator earnings, and advertiser values."
+ *   — https://support.google.com/youtube/answer/6175006
+ *
+ * 게재 확률에 영향을 주는 요소도 공식 문서에 나온다.
+ *   "Ad slots placed at natural breakpoints, such as a pause in audio or
+ *    transition in visual, are more likely to serve ads ... Mid-roll ad slots
+ *    that can be disruptive to the viewer experience, such as mid-sentence or
+ *    mid-action are less likely to serve ads."
+ *
+ * TTS 낭독은 끊김 없이 이어지므로 자연 중단점이 적다.
+ * 따라서 이 방식의 영상은 슬롯이 빨간색(게재 가능성 낮음)으로 표시될 소지가 있다.
+ *
+ * 4분 간격은 저자의 추정이며 공식 근거가 없다.
+ * YouTube는 간격 수치를 공개하지 않는다.
  */
+const ESTIMATED_SLOT_INTERVAL_SEC = 4 * 60;
+
 export function estimateMidrollSlots(seconds: number): number {
   if (seconds < 8 * 60) return 0;
-  const INTERVAL = 4 * 60;
   // 첫 슬롯은 도입 이후, 마지막은 끝나기 전에 배치된다고 본다
-  return Math.max(1, Math.floor((seconds - INTERVAL) / INTERVAL));
+  return Math.max(1, Math.floor((seconds - ESTIMATED_SLOT_INTERVAL_SEC) / ESTIMATED_SLOT_INTERVAL_SEC));
 }
+
+/** 중간광고에 관한 공식 사실. UI에서 그대로 보여주기 위한 것 */
+export const MIDROLL_FACTS = {
+  sourceUrl: 'https://support.google.com/youtube/answer/6175006',
+  notGuaranteed:
+    'Ad slots are not guaranteed to serve ads. 슬롯을 넣어도 광고가 붙는다는 보장이 없습니다.',
+  naturalBreakpoints:
+    '오디오가 멈추거나 화면이 전환되는 자연 중단점에 놓인 슬롯이 광고를 받을 가능성이 높습니다. 문장 중간이나 동작 중간은 낮습니다.',
+  ttsRisk:
+    'TTS 낭독은 끊김 없이 이어져 자연 중단점이 적습니다. 챕터 사이나 장면 전환 지점에 수동으로 슬롯을 놓는 편이 유리합니다.',
+  qualityFeedback:
+    'YouTube Studio는 게재 가능성이 낮은 슬롯을 빨간색으로 표시합니다. 업로드 후 한 시간 안에 확인하고 조정하세요.',
+  meditationCaveat:
+    'YouTube 공식 FAQ는 "명상 영상은 중간광고에 적합하지 않을 수 있다"고 밝힙니다. 잠들기 전 듣는 용도라면 광고가 시청 이탈을 부를 수 있으므로, 슬롯을 늘리는 것이 항상 이득은 아닙니다.',
+  intervalIsEstimate:
+    '이 앱의 슬롯 개수 추정은 4분 간격을 가정한 것이며 공식 근거가 없습니다. YouTube는 간격을 공개하지 않습니다.',
+} as const;
 
 /** 목표 러닝타임을 맞추려면 몇 자가 필요한가 */
 export function charsForRuntime(minutes: number, speed: TtsSpeed = 'normal'): number {
@@ -205,30 +253,58 @@ export function planForTarget(input: RevenueInput, targetProfitKrw: number): Tar
   };
 }
 
-/** 참고용 RPM 시나리오. 사용자가 감을 잡을 기준점 */
+/**
+ * 참고용 RPM 시나리오.
+ *
+ * ⚠ 이 값들은 공식 통계가 아니다. 아래 근거에서 도출한 참고 구간이다.
+ *
+ * 도출 근거
+ *   - 전 니치 RPM 중위값 약 $2.30 (AIR Media-Tech, 300개 채널 실데이터, 2026)
+ *   - Entertainment 니치 RPM 약 $2.43 (같은 자료)
+ *   - 한국 CPM 약 $2.7 / 미국 약 $11.1 (isthischannelmonetized.com 국가별 CPM)
+ *     → 한국은 미국의 약 4분의 1
+ *   - YouTube 수익 배분 제작자 55% (공식)
+ *
+ * 한국 시청자 기반 채널은 위 글로벌 중위값보다 낮은 구간에 놓일 가능성이 높다.
+ * 환율은 1달러 1,350원 전후로 계산했다.
+ *
+ * 실제 값은 자기 채널의 YouTube Studio에서 확인해야 한다.
+ * Analytics → 수익 → RPM 항목에 실측치가 나온다.
+ */
 export const RPM_SCENARIOS = [
   {
     id: 'pessimistic',
     label: '보수적',
     rpmKrw: 1200,
-    note: '한국 시청자 위주, 시청 지속시간이 짧은 경우',
+    note: '한국 시청자 위주에 시청 지속시간이 짧은 경우. 글로벌 중위값의 절반 아래를 가정한 하한.',
+    basis: 'estimate' as const,
   },
   {
     id: 'typical',
     label: '일반적',
     rpmKrw: 2200,
-    note: '한국 엔터테인먼트 롱폼의 흔한 구간',
+    note: '한국 CPM $2.7에 배분율 55%를 적용하면 약 $1.5, 원화 2,000원 전후. 여기에 중간광고 효과를 조금 얹은 값.',
+    basis: 'derived' as const,
   },
   {
     id: 'good',
     label: '양호',
     rpmKrw: 3500,
-    note: '중간광고가 잘 붙고 지속시간이 긴 경우',
+    note: 'Entertainment 글로벌 중위값 $2.43(약 3,300원) 수준. 중간광고가 잘 붙고 지속시간이 긴 경우.',
+    basis: 'derived' as const,
   },
   {
     id: 'lecture',
     label: '강의 사례',
     rpmKrw: 13000,
-    note: '조회수 6만에 80만원. 한국 기준으로는 이례적인 수치다',
+    note: '조회수 6만에 80만원이라는 강의 주장에서 역산한 값. 일반 구간의 약 여섯 배로, 재현 가능성이 낮습니다.',
+    basis: 'claim' as const,
   },
 ] as const;
+
+/** RPM 시나리오의 근거 수준 설명 */
+export const RPM_BASIS_LABEL = {
+  estimate: '저자 추정',
+  derived: '공개 자료에서 도출',
+  claim: '강의 주장에서 역산',
+} as const;

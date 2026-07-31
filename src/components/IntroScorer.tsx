@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import { scoreIntro, type CheckState } from '../lib/introScore';
-import { rankNiches, type PolicyFit } from '../data/niches';
+import {
+  EVIDENCE_LABEL,
+  rankNiches,
+  SCORE_DISCLAIMER,
+  SCORE_WEIGHTS,
+  type PolicyFit,
+} from '../data/niches';
 import { useStore } from '../state/store';
 import { TextArea } from './ui';
 
@@ -74,6 +80,12 @@ export function IntroScorer() {
         }`}
       >
         {result.verdict}
+      </p>
+
+      <p className="alert alert--warn">
+        이 점수는 프롬프트 규칙을 지켰는지 기계적으로 검사한 것입니다.{' '}
+        <strong>실제 시청 유지율과의 상관관계는 검증되지 않았습니다.</strong> 배점(30·25·20·15·10)도
+        저자가 정한 것이며 근거가 없습니다. 점수보다 아래 통과·실패 항목을 보세요.
       </p>
 
       <ul className="check-score-list">
@@ -155,7 +167,7 @@ export function NicheAdvisor() {
       </p>
 
       <ul className="niche-list">
-        {ranked.map(({ niche: n, score, recommendation, summary }) => {
+        {ranked.map(({ niche: n, score, breakdown, recommendation, summary, weakestEvidence }) => {
           const open = openId === n.id;
           return (
             <li className={`niche niche--${recommendation === '권장' ? 'good' : recommendation === '조건부' ? 'mid' : 'bad'}`} key={n.id}>
@@ -179,6 +191,9 @@ export function NicheAdvisor() {
                 </span>
                 <span className="badge">포화 {n.saturation}</span>
                 <span className="badge">단가 {n.rpmTier}</span>
+                <span className={`badge${weakestEvidence === 'inferred' ? ' badge--warn' : ''}`}>
+                  근거 {EVIDENCE_LABEL[weakestEvidence]}
+                </span>
                 <span className="niche__toggle" aria-hidden="true">
                   {open ? '−' : '+'}
                 </span>
@@ -190,15 +205,46 @@ export function NicheAdvisor() {
                 <div className="niche__detail">
                   <p className="niche__desc">{n.description}</p>
 
+                  <div className="score-break">
+                    {(
+                      [
+                        ['policy', breakdown.policy],
+                        ['saturation', breakdown.saturation],
+                        ['rpm', breakdown.rpm],
+                      ] as const
+                    ).map(([k, v]) => (
+                      <div className="score-break__item" key={k}>
+                        <span className="score-break__label">{SCORE_WEIGHTS[k].label}</span>
+                        <span className="score-break__bar">
+                          <span
+                            className="score-break__fill"
+                            style={{ width: `${(v / SCORE_WEIGHTS[k].max) * 100}%` }}
+                          />
+                        </span>
+                        <span className="score-break__num">
+                          {v}/{SCORE_WEIGHTS[k].max}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
                   <dl className="niche__facts">
                     <dt>방법론 재사용</dt>
                     <dd>{n.methodReuse}</dd>
                     <dt>정책 판단</dt>
-                    <dd>{n.policyReason}</dd>
+                    <dd>
+                      {n.policyReason}{' '}
+                      <span className="ev">[{EVIDENCE_LABEL[n.policyEvidence]}]</span>
+                    </dd>
                     <dt>포화도</dt>
-                    <dd>{n.saturationReason}</dd>
+                    <dd>
+                      {n.saturationReason}{' '}
+                      <span className="ev">[{EVIDENCE_LABEL[n.saturationEvidence]}]</span>
+                    </dd>
                     <dt>광고 단가</dt>
-                    <dd>{n.rpmReason}</dd>
+                    <dd>
+                      {n.rpmReason} <span className="ev">[{EVIDENCE_LABEL[n.rpmEvidence]}]</span>
+                    </dd>
                     <dt>주 시청층</dt>
                     <dd>{n.audience}</dd>
                   </dl>
@@ -216,9 +262,12 @@ export function NicheAdvisor() {
         })}
       </ul>
 
+      <p className="alert alert--warn">{SCORE_DISCLAIMER}</p>
+
       <p className="alert alert--info">
-        점수는 정책 안전성(40점) · 낮은 포화도(35점) · 광고 단가(25점)를 합한 것입니다. 제 판단이
-        섞인 지표이며 절대적 기준이 아닙니다. 포화도는 공식 통계가 없어 정성적으로 매겼습니다.
+        포화도 판정은 공식 통계가 없어 대부분 <strong>추론</strong>입니다. 민담의 "매우 높음"만 강의
+        진행자의 공개 발언에 근거합니다. 각 항목의 근거 수준을 확인하고, 추론 표시가 붙은 것은 그대로
+        믿지 마세요.
       </p>
 
       <p className="alert alert--warn">
