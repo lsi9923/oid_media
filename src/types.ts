@@ -65,7 +65,10 @@ export type StepWidget =
   | 'opsTax'
   | 'opsCopyright'
   | 'opsUpload'
-  | 'opsMidroll';
+  | 'opsMidroll'
+  | 'setupGates'
+  | 'runwayCalculator'
+  | 'startupCosts';
 
 /** 워크플로우 한 단계 */
 export interface Step {

@@ -2715,3 +2715,254 @@ select.field__input {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ══════════════════════════════════════════════════
+   채널 개설 관문 · 수익화 도달 계산 · 비용 구성표
+   ══════════════════════════════════════════════════ */
+
+.gate-list {
+  list-style: none;
+  margin: 0 0 var(--s4);
+  padding: 0;
+  display: grid;
+  gap: var(--s2);
+  counter-reset: gate;
+}
+
+.gate {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: var(--s3);
+  border-left: 3px solid var(--line-2);
+}
+
+.gate.is-on {
+  border-left-color: var(--ok);
+  opacity: 0.6;
+}
+
+/* 요건 달성 관문은 가장 길고 비용이 드는 구간이라 눈에 띄게 둔다 */
+.gate.is-long {
+  border-left-color: var(--warn);
+  background: var(--surface-3);
+}
+
+.gate.is-long.is-on {
+  border-left-color: var(--ok);
+}
+
+.gate__head {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: var(--s2);
+  cursor: pointer;
+}
+
+.gate__head input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ok);
+  cursor: pointer;
+  margin: 0;
+}
+
+.gate__no {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--tx-3);
+  min-width: 14px;
+}
+
+.gate__name {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--tx);
+}
+
+.gate.is-on .gate__name {
+  text-decoration: line-through;
+  color: var(--tx-2);
+}
+
+.gate__cost {
+  font-size: var(--fs-xs);
+  font-family: var(--mono);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.gate__dur {
+  font-size: var(--fs-xs);
+  color: var(--tx-3);
+  white-space: nowrap;
+}
+
+.gate__what {
+  margin: var(--s2) 0 0;
+  padding-left: var(--s5);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  color: var(--tx-2);
+}
+
+.gate__risk {
+  margin: var(--s2) 0 0;
+  padding-left: var(--s5);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--warn);
+}
+
+.gate__src {
+  margin: var(--s1) 0 0;
+  padding-left: var(--s5);
+  font-size: var(--fs-xs);
+}
+
+.gate__src a {
+  color: var(--lo);
+}
+
+@media (max-width: 640px) {
+  .gate__head {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .gate__cost,
+  .gate__dur {
+    grid-column: 3;
+    text-align: right;
+  }
+
+  .gate__what,
+  .gate__risk,
+  .gate__src {
+    padding-left: 0;
+  }
+}
+
+/* ── 수익화 도달 ── */
+
+.runway {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: var(--s3) var(--s4);
+  margin: var(--s4) 0;
+}
+
+.runway__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+}
+
+.runway__row--sum {
+  border-top: 1px solid var(--line);
+  margin-top: var(--s2);
+  padding-top: var(--s3);
+}
+
+.runway__label {
+  font-size: var(--fs-sm);
+  color: var(--tx-2);
+}
+
+.runway__val {
+  font-family: var(--mono);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+}
+
+/* 병목이 되는 요건을 표시한다 */
+.runway__val.is-bottleneck {
+  color: var(--warn);
+}
+
+.runway__val.is-bottleneck::after {
+  content: ' 병목';
+  font-family: var(--font);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
+
+.runway__val--big {
+  font-size: var(--fs-2xl);
+  color: var(--accent);
+}
+
+/* ── 비용 구성표 ── */
+
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--s3) 0 var(--s4);
+  font-size: var(--fs-sm);
+}
+
+.cost-table th {
+  text-align: left;
+  padding: var(--s2) var(--s3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--tx-3);
+  border-bottom: 1px solid var(--line);
+  text-transform: none;
+}
+
+.cost-table th:not(:first-child),
+.cost-table td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cost-table td {
+  padding: var(--s3);
+  border-bottom: 1px solid var(--line);
+  color: var(--tx-2);
+  vertical-align: top;
+}
+
+.cost-table td strong {
+  color: var(--tx);
+  font-weight: 600;
+}
+
+.cost-table tr.is-optional td:first-child strong::after {
+  content: ' (선택)';
+  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--tx-3);
+}
+
+.cost-table td.is-free {
+  color: var(--ok);
+}
+
+.cost-note {
+  display: block;
+  margin-top: var(--s1);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+  color: var(--tx-3);
+}
+
+.cost-table tfoot td {
+  border-bottom: none;
+  padding-top: var(--s3);
+  color: var(--tx);
+}
+
+.cost-table tfoot tr:first-child td {
+  border-top: 1px solid var(--line-2);
+}
+
+.cost-table tfoot strong {
+  color: var(--accent);
+  font-family: var(--mono);
+}

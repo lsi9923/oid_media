@@ -183,6 +183,62 @@ describe('워크플로우 통합', () => {
     expect(PHASES[1]?.id).toBe('policy');
   });
 
+  it('★ 채널 개설 페이즈가 정책 다음이다', () => {
+    // 정책을 읽고 시작을 그만둘 수도 있으므로 정책이 먼저 와야 한다
+    expect(PHASES[2]?.id).toBe('launch');
+    expect(PHASES.findIndex((p) => p.id === 'policy')).toBeLessThan(
+      PHASES.findIndex((p) => p.id === 'launch'),
+    );
+  });
+
+  it('★ 채널 개설이 세팅·제작보다 앞이다', () => {
+    const i = (id: string) => PHASES.findIndex((p) => p.id === id);
+    expect(i('launch')).toBeLessThan(i('setup'));
+    expect(i('launch')).toBeLessThan(i('script'));
+  });
+
+  it('★ 채널 개설 페이즈에 수익화 도달과 관문 두 단계가 있다', () => {
+    const launch = STEPS.filter((s) => s.phaseId === 'launch');
+    expect(launch.map((s) => s.id)).toEqual(['launch-runway', 'launch-gates']);
+  });
+
+  it('★ 수익화 도달 단계에 계산기와 비용표가 붙어 있다', () => {
+    const s = findStep('launch-runway');
+    expect(s?.judgment).toBe(true);
+    expect(s?.widgets).toContain('runwayCalculator');
+    expect(s?.widgets).toContain('startupCosts');
+  });
+
+  it('★ 수익화 도달 단계가 요건 수치를 명시한다', () => {
+    const s = findStep('launch-runway');
+    expect(s?.summary).toMatch(/1,000명/);
+    expect(s?.summary).toMatch(/4,000시간/);
+    expect(s?.keyPoint).toMatch(/0원|수입은 없/);
+  });
+
+  it('★ 수익화 도달 단계가 12개월 만료를 경고한다', () => {
+    const s = findStep('launch-runway');
+    const w = s?.checklist.find((c) => c.id === 'window');
+    expect(w?.warning).toMatch(/12개월/);
+  });
+
+  it('★ 관문 단계가 고급 기능 인증을 요구한다', () => {
+    // 이 권한이 없으면 15분 넘는 영상을 못 올려 두 시간짜리 민담이 불가능하다
+    const s = findStep('launch-gates');
+    const g = s?.checklist.find((c) => c.id === 'g4');
+    expect(g?.label).toMatch(/고급 기능/);
+    expect(g?.warning).toMatch(/15분/);
+  });
+
+  it('★ 관문 단계가 2단계 인증과 세금 정보를 요구한다', () => {
+    const s = findStep('launch-gates');
+    const ids = s?.checklist.map((c) => c.id) ?? [];
+    expect(ids).toContain('g2');
+    expect(ids).toContain('g6');
+    expect(s?.checklist.find((c) => c.id === 'g6')?.warning).toMatch(/24%/);
+    expect(s?.widgets).toContain('setupGates');
+  });
+
   it('손익 계산이 첫 번째 단계다', () => {
     expect(STEPS[0]?.id).toBe('decide-economics');
   });
@@ -233,8 +289,8 @@ describe('워크플로우 통합', () => {
     expect(s?.widgets).toContain('episodeHistory');
   });
 
-  it('전체 단계가 31개다', () => {
-    expect(STEPS).toHaveLength(31);
+  it('전체 단계가 33개다', () => {
+    expect(STEPS).toHaveLength(33);
   });
 
   it('세무·저작권 단계가 업로드 페이즈에 있다', () => {
@@ -258,14 +314,15 @@ describe('워크플로우 통합', () => {
     expect(warn?.warning).toMatch(/not guaranteed|과대추정/);
   });
 
-  it('페이즈가 9개다', () => {
-    expect(PHASES).toHaveLength(9);
+  it('페이즈가 10개다', () => {
+    expect(PHASES).toHaveLength(10);
   });
 
-  it('사람 판단이 필요한 단계가 6개다', () => {
-    // 손익, 니치, 인트로 검수, 인트로 다듬기, 썸네일 카피, 정책
+  it('사람 판단이 필요한 단계가 7개다', () => {
+    // 손익, 니치, 정책, 수익화 도달, 인트로 검수, 인트로 다듬기, 썸네일 카피
     const judgment = STEPS.filter((s) => s.judgment);
-    expect(judgment).toHaveLength(6);
+    expect(judgment).toHaveLength(7);
+    expect(judgment.map((s) => s.id)).toContain('launch-runway');
   });
 
   it('모든 단계의 phaseId가 실제 페이즈를 가리킨다', () => {

@@ -15,6 +15,7 @@ import { RevenueSimulator, RuntimeCalculator } from './RevenueSimulator';
 import { IntroScorer, NicheAdvisor } from './IntroScorer';
 import { ThumbnailPreview } from './ThumbnailPreview';
 import { OpsFacts } from './OpsFacts';
+import { RunwayCalculator, SetupGates, StartupCosts } from './Runway';
 import {
   ChannelTracker,
   CostCalculator,
@@ -56,6 +57,9 @@ const WIDGET_LABEL: Record<StepWidget, string> = {
   opsCopyright: '저작권',
   opsUpload: '업로드 운영',
   opsMidroll: '중간광고',
+  setupGates: '아홉 관문 체크리스트',
+  runwayCalculator: '수익화 도달 계산',
+  startupCosts: '비용 구성표',
 };
 
 function renderWidget(widget: StepWidget) {
@@ -122,6 +126,12 @@ function renderWidget(widget: StepWidget) {
       return <OpsFacts only="업로드 운영" />;
     case 'opsMidroll':
       return <OpsFacts only="중간광고" />;
+    case 'setupGates':
+      return <SetupGates />;
+    case 'runwayCalculator':
+      return <RunwayCalculator />;
+    case 'startupCosts':
+      return <StartupCosts />;
     default:
       return null;
   }
