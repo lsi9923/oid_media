@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
  *
  * VITE_BASE 환경변수로 덮어쓸 수 있다. 예) VITE_BASE=/ npm run build
  */
-const REPO_BASE = '/mindam-studio/';
+const REPO_BASE = '/oid_media/';
 
 export default defineConfig(({ command }) => ({
   plugins: [react()],

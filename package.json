@@ -1,9 +1,9 @@
 {
-  "name": "mindam-studio",
+  "name": "oid-media",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "민담 유튜브 채널 제작 워크플로우를 단계별로 진행하는 웹 스튜디오",
+  "description": "민담 유튜브 채널 제작 워크플로우를 27단계로 진행하는 웹 스튜디오",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
