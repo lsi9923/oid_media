@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vite/
+*.local
+
+# 검증용 임시 산출물 (강의 자막, 스모크 테스트)
+_transcript/
+_verify/

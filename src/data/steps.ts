@@ -1,0 +1,833 @@
+import type { Phase, Step } from '../types';
+
+/**
+ * 강의(돈버니 채널 · 행크 출연)의 제작 순서를 그대로 옮긴 워크플로우 정의.
+ * timestamp는 원본 영상에서 해당 내용이 나오는 지점.
+ */
+
+export const PHASES: Phase[] = [
+  {
+    id: 'setup',
+    badge: '0',
+    title: '세팅',
+    goal: '도구 결제와 Claude 프로젝트 4개를 만들어 "공장"을 세운다.',
+  },
+  {
+    id: 'script',
+    badge: '1',
+    title: '대본',
+    goal: '주제 선택부터 46,000자 대본과 썸네일 브리프까지 뽑는다.',
+  },
+  {
+    id: 'image',
+    badge: '2',
+    title: '이미지 40장',
+    goal: '인물 5명을 고정하고 본문 장면 이미지 40장을 생성한다.',
+  },
+  {
+    id: 'intro',
+    badge: '3',
+    title: '인트로 영상',
+    goal: '영상 도입 4컷을 Grok으로 만든다. 마케팅의 절반.',
+  },
+  {
+    id: 'thumbnail',
+    badge: '4',
+    title: '썸네일',
+    goal: '카피를 고르고 이미지에 글자를 입혀 JPG로 뽑는다. 마케팅의 나머지 절반.',
+  },
+  {
+    id: 'assemble',
+    badge: '5',
+    title: 'Vrew 조합',
+    goal: 'TTS 음성 + 이미지 40장 + 인트로를 하나의 영상으로 합친다.',
+  },
+  {
+    id: 'publish',
+    badge: '6',
+    title: '업로드 · 운영',
+    goal: 'AI 제작 표시를 하고 올린 뒤, 다채널로 확장한다.',
+  },
+];
+
+export const STEPS: Step[] = [
+  // ─────────────────────────── Phase 0: 세팅 ───────────────────────────
+  {
+    id: 'setup-tools',
+    phaseId: 'setup',
+    title: '도구 3개 결제 · 2개 가입',
+    summary: '유료는 Claude·Grok·Vrew 세 개뿐. Flow와 미리캔버스는 무료다.',
+    timestamp: '33:24',
+    tools: ['claude', 'grok', 'vrew', 'flow', 'miricanvas'],
+    duration: '20분',
+    keyPoint:
+      '월 약 8만원. 영상 1개 제작 원가는 1,000~2,000원. 무료 도구는 언제 유료로 바뀔지 모르니 시작을 미루지 말 것.',
+    actions: [
+      'Claude(claude.ai) 가입 후 Pro($20/월) 결제. 모델은 Sonnet을 쓴다.',
+      'Grok(grok.com) 결제(약 3만원/월) — 인트로 영상용.',
+      'Vrew(vrew.ai) Standard(29,000원/월) 결제 — TTS와 편집용.',
+      'Google Flow(labs.google/flow)는 구글 계정으로 로그인만 하면 무료.',
+      '미리캔버스도 무료 가입.',
+    ],
+    checklist: [
+      { id: 'claude', label: 'Claude Pro 결제 완료 (모델: Sonnet)' },
+      {
+        id: 'grok',
+        label: 'Grok 결제 완료',
+        warning: '예전엔 무료였다. 무료 정책은 계속 축소되는 중.',
+      },
+      { id: 'vrew', label: 'Vrew Standard 결제 완료' },
+      { id: 'flow', label: 'Google Flow 로그인 확인 (무료)' },
+      { id: 'canvas', label: '미리캔버스 가입 (무료)' },
+    ],
+    widgets: ['costCalculator'],
+  },
+  {
+    id: 'setup-download',
+    phaseId: 'setup',
+    title: '프롬프트 9개 확보',
+    summary:
+      '이 앱에 프롬프트 9개가 들어 있습니다. 복사하거나 .txt로 받아 쓰세요. 원본 자료를 받으셨다면 그것을 쓰십시오.',
+    timestamp: '15:14',
+    tools: [],
+    duration: '5분',
+    keyPoint:
+      '프롬프트가 있느냐 없느냐로 결과가 갈립니다. 같은 Claude에 그냥 "민담 만들어 줘"라고 하면 이렇게 나오지 않습니다. 공장에 설비를 넣는 단계입니다.',
+    actions: [
+      '아래 라이브러리에서 "9개 전부 .txt로 받기"를 누른다.',
+      '파일 9개가 순서대로 내려받아진다. 파일명의 번호가 설치 순서다.',
+      '지침 칸에 넣을 것(4개)과 파일로 업로드할 것(3개)을 구분해 둔다.',
+      '강의 고정 댓글에서 원본 자료를 받았다면, 검증된 실적이 있으므로 그쪽을 쓰는 편이 낫다.',
+    ],
+    checklist: [
+      { id: 'dl', label: '프롬프트 9개 확보 (이 앱 또는 원본 자료)' },
+      {
+        id: 'sort',
+        label: '지침용 4개 / 파일용 3개 구분 확인',
+        warning: '이 둘을 섞으면 작동하지 않는다. 다음 단계에서 위치가 갈린다.',
+      },
+    ],
+    widgets: ['promptLibrary'],
+  },
+  {
+    id: 'setup-projects',
+    phaseId: 'setup',
+    title: 'Claude 프로젝트 4개 만들기',
+    summary:
+      '민담 대본 / 민담 이미지 / 민담 인트로 / 민담 썸네일. 지침 칸 4개, 파일 업로드는 대본에만 3개.',
+    timestamp: '16:10',
+    tools: ['claude'],
+    duration: '15분',
+    keyPoint:
+      '프롬프트는 반드시 "지침(Instructions)"에 넣습니다. 프로젝트 설명란에 넣는 실수가 가장 흔합니다. 설명란은 프로젝트를 설명하는 칸일 뿐 지침으로 작동하지 않습니다.',
+    actions: [
+      'Claude에서 새 프로젝트를 만들고 이름을 "민담 대본"으로 한다.',
+      '01_민담대본_MAIN.txt 내용을 지침(Instructions) 칸에 붙여넣고 저장한다.',
+      '같은 프로젝트의 파일 영역에 02, 03, 04 세 파일을 업로드한다. 지침 칸이 아니다.',
+      '새 프로젝트 "민담 이미지"를 만들고 05번을 지침 칸에 붙여넣는다. 파일 업로드는 하지 않는다.',
+      '새 프로젝트 "민담 인트로"를 만들고 06번을 지침 칸에 붙여넣는다.',
+      '새 프로젝트 "민담 썸네일"을 만들고 07번을 지침 칸에 붙여넣는다.',
+      '네 프로젝트 모두 모델을 Sonnet으로 맞춘다.',
+    ],
+    checklist: [
+      { id: 'p1', label: '민담 대본 — 01번 지침 + 02·03·04번 파일 업로드' },
+      {
+        id: 'p2',
+        label: '민담 이미지 — 05번 지침만',
+        warning: '이미지·인트로·썸네일 프로젝트에는 파일을 넣지 않는다.',
+      },
+      { id: 'p3', label: '민담 인트로 — 06번 지침만' },
+      { id: 'p4', label: '민담 썸네일 — 07번 지침만' },
+      {
+        id: 'model',
+        label: '4개 프로젝트 모두 모델을 Sonnet으로 설정',
+        warning: 'Opus를 쓰면 사용량 한도 때문에 긴 대본을 끝까지 못 만든다.',
+      },
+    ],
+    widgets: ['projectSetup', 'promptLibrary'],
+  },
+
+  // ─────────────────────────── Phase 1: 대본 ───────────────────────────
+  {
+    id: 'script-topic',
+    phaseId: 'script',
+    title: '주제 추천 받기 → 카테고리 고르기',
+    summary: '"민담 대본" 프로젝트에 한 줄만 입력하면 카테고리를 제시한다.',
+    timestamp: '19:03',
+    tools: ['claude'],
+    duration: '2분',
+    keyPoint:
+      '여기서 나오는 주제가 잘 먹히는 이유는, 프롬프트에 실제로 잘 된 민담들만 수집해서 넣어놨기 때문이다(모티프 뱅크).',
+    actions: [
+      '"민담 대본" 프로젝트에서 새 대화를 시작한다.',
+      '아래 명령을 붙여넣는다.',
+      '권선징악 / 귀신·도깨비 / 미스터리·추리 / 사랑 등 카테고리가 나오면 하나를 고른다.',
+      '민담은 대부분 권선징악 계열이 안정적이다.',
+    ],
+    prompts: [
+      {
+        label: '첫 명령 (민담 대본 프로젝트에서)',
+        text: '이야기 만들 거야. 주제 추천해 줘.',
+      },
+      {
+        label: '카테고리 선택 (예: 며느리/시집 갈래)',
+        text: 'C',
+      },
+    ],
+    checklist: [
+      { id: 'sent', label: '주제 추천 명령 입력' },
+      { id: 'category', label: '카테고리 A~D 중 선택 완료' },
+    ],
+    widgets: ['scriptVault'],
+  },
+  {
+    id: 'script-pick',
+    phaseId: 'script',
+    title: '주제 선택',
+    summary: '추천된 주제 목록에서 마음에 드는 것 하나를 알파벳으로 선택한다.',
+    timestamp: '21:03',
+    tools: ['claude'],
+    duration: '1분',
+    keyPoint:
+      '주제를 사람이 고르는 이 판단이 있어야 YouTube의 AI 정책에 걸리지 않는다. 클릭 한 번으로 영상까지 나오는 완전 자동화가 채널 삭제 사유다.',
+    actions: [
+      '제시된 주제 중 제목만 봐도 궁금해지는 것을 고른다.',
+      '해당 알파벳(예: B)만 입력하고 보낸다.',
+      '"이유를 모르겠는" 제목이 좋다. 궁금증이 클릭을 만든다.',
+    ],
+    checklist: [
+      { id: 'picked', label: '주제 확정' },
+      {
+        id: 'curious',
+        label: '제목만 보고 궁금해지는지 스스로 점검했다',
+        warning: '"나무꾼 이야기"처럼 평범한 제목은 소개팅에서 탈락하는 사진과 같다.',
+      },
+    ],
+    widgets: ['scriptVault'],
+  },
+  {
+    id: 'script-intro',
+    phaseId: 'script',
+    title: '인트로 대사 검수 ★',
+    summary: '주제를 고르면 인트로 대사가 자동으로 나온다. 이건 반드시 읽고 판단한다.',
+    timestamp: '21:34',
+    tools: ['claude'],
+    duration: '10분',
+    judgment: true,
+    keyPoint:
+      '만드는 법과 돈 버는 법은 다르다. 썸네일은 소개팅 사진, 인트로는 첫 만남이다. 이 둘에서 떨어지면 대본이 아무리 좋아도 아무도 보지 않는다.',
+    actions: [
+      '나온 인트로 대사를 소리 내어 읽어본다.',
+      '나레이션이 아니라 등장인물의 대사로 시작하는지 확인한다.',
+      '"왜 그랬지?"라는 의문이 즉시 생기는지 본다.',
+      '맹맹하면 다시 뽑거나, 톤을 지정해 수정을 요청한다. (예: "노부인이 화내는 말투로 바꿔 줘")',
+      '마음에 드는 인트로가 나올 때까지 여기서 시간을 쓴다.',
+    ],
+    prompts: [
+      {
+        label: '톤 수정 예시',
+        text: '3안으로 가되, 노부인의 말투를 더 차갑고 내리누르는 쪽으로 바꿔 줘. 화를 겉으로 드러내지 않는 방향으로.',
+      },
+      {
+        label: '다시 뽑기',
+        text: '세 안 모두 약해. 다시 뽑아 줘. 첫 문장이 등장인물 대사여야 하고, 그 대사가 상식에 어긋나서 이유가 궁금해지는 방향으로. 이유는 절대 설명하지 마.',
+      },
+      {
+        label: '선택 확정',
+        text: '2안으로 확정. 다음으로 넘어가 줘.',
+      },
+    ],
+    checklist: [
+      { id: 'dialogue', label: '등장인물 대사로 시작한다' },
+      { id: 'hook', label: '이유를 모르겠어서 궁금해진다' },
+      { id: 'saved', label: '확정한 인트로 대사를 아래에 저장했다' },
+    ],
+    widgets: ['scriptVault'],
+  },
+  {
+    id: 'script-names',
+    phaseId: 'script',
+    title: '인물 · 이름 확정 (NamePicker)',
+    summary: 'TTS가 발음하기 어려운 이름은 프롬프트가 알아서 교체한다. 그대로 진행한다.',
+    timestamp: '25:51',
+    tools: ['claude'],
+    duration: '2분',
+    keyPoint:
+      '사람 눈으로는 읽히는 이름도 TTS는 못 읽는 경우가 있다. 우리는 AI가 읽는 영상을 만들기 때문에 이 필터가 중요하다.',
+    actions: [
+      '계속 진행하면 캐릭터와 이름이 자동 생성된다.',
+      '"TTS에 걸릴 것 같다"며 이름을 교체한다는 안내가 나오면 그대로 수락한다.',
+      '채널에서 쓰지 말라고 등록된 금지 이름도 자동으로 걸러진다.',
+      '이름을 외울 필요는 없다. 이후 단계에서 그대로 참조한다.',
+    ],
+    checklist: [
+      { id: 'names', label: '등장인물 이름 목록 확보' },
+      { id: 'tts', label: 'TTS 발음 경고가 있던 이름은 교체본을 사용' },
+    ],
+    widgets: ['characterVault'],
+  },
+  {
+    id: 'script-outline',
+    phaseId: 'script',
+    title: '줄거리 · 반전 6개 · 감동 포인트',
+    summary: '읽지 않아도 된다. AI가 긴 글을 쓰면서 앞 내용을 잊지 않게 하는 설계도다.',
+    timestamp: '26:39',
+    tools: ['claude'],
+    duration: '5분',
+    keyPoint:
+      '이 산출물(StoryPact)은 챕터마다 다시 참조되는 설명서다. 사람이 검수할 대상이 아니다. 여기 힘을 쓰면 수익화가 늦어진다.',
+    actions: [
+      '계속 진행하면 줄거리, 시간순 반전 6개, 감동 포인트가 나온다.',
+      '읽지 말고 그냥 넘긴다.',
+      '반전이 있어야 1~2시간 이야기가 지루해지지 않고, 감동 포인트는 50·60대 시청층을 잡는 장치다.',
+    ],
+    checklist: [
+      { id: 'outline', label: '줄거리 생성 완료' },
+      {
+        id: 'skip',
+        label: '내용을 읽지 않고 넘어갔다',
+        warning: '"이야기가 좀 이상한데?"를 붙잡는 사람이 수익화가 가장 늦다.',
+      },
+    ],
+  },
+  {
+    id: 'script-generate',
+    phaseId: 'script',
+    title: '영상 길이 선택 → 대본 생성',
+    summary: '2시간을 고르면 약 46,000자 대본이 15~20분에 걸쳐 생성된다.',
+    timestamp: '27:00',
+    tools: ['claude'],
+    duration: '15~20분 (대기)',
+    keyPoint:
+      '롱폼이 길수록 중간광고가 많이 붙는다. 조회수 6만짜리 1시간 40분 영상에서 약 80만원이 나온 사례가 강의에 등장한다.',
+    actions: [
+      '길이를 물어보면 2시간을 선택한다.',
+      '챕터 하나씩 생성된다. "이어서 쓸까요?"가 나오면 계속하라고 답한다. 아홉 챕터를 반복한다.',
+      '챕터마다 스토리 팩트 점검 결과가 함께 나온다. 읽지 않아도 되지만, 설정이 어긋났다는 표시가 있으면 그 챕터만 다시 받는다.',
+      '완성된 대본 전문을 복사해 아래 보관함에 저장한다.',
+      '마지막에 나오는 썸네일 브리프를 따로 저장한다. 3·4단계에서 쓴다.',
+    ],
+    prompts: [
+      { label: '길이 선택', text: '두 시간으로 해 줘.' },
+      { label: '챕터 이어쓰기', text: '이어서 써 줘.' },
+      { label: '썸네일 브리프 요청', text: '대본 끝났으면 썸네일 브리프 만들어 줘.' },
+    ],
+    checklist: [
+      { id: 'len', label: '길이 2시간 선택' },
+      { id: 'chapters', label: '아홉 챕터 모두 생성' },
+      { id: 'script', label: '대본 전문 저장 (목표 46,000자 내외)' },
+      {
+        id: 'brief',
+        label: '썸네일 브리프 별도 저장',
+        warning: '인트로·썸네일 단계에서 반드시 다시 필요하다. 지금 챙겨두지 않으면 되돌아와야 한다.',
+      },
+    ],
+    widgets: ['scriptVault'],
+  },
+
+  // ─────────────────────────── Phase 2: 이미지 ───────────────────────────
+  {
+    id: 'image-style',
+    phaseId: 'image',
+    title: '대본 투입 + 그림체 지정',
+    summary: '"민담 이미지" 프로젝트에 대본을 넣고 그림체를 한 줄로 지정한다.',
+    timestamp: '30:33',
+    tools: ['claude'],
+    duration: '3분',
+    keyPoint:
+      '"조선시대 사파"처럼 학습이 덜 된 표현을 쓰면 그림이 뻑뻑하게 나온다. "한국 조선시대 웹툰"처럼 AI가 많이 학습한 표현이 안정적이다.',
+    actions: [
+      '"민담 이미지" 프로젝트에서 새 대화를 시작한다.',
+      '앞에서 저장한 대본 전문을 붙여넣는다.',
+      '그림체를 물어보면 "한국 조선시대 웹툰"이라고 입력한다.',
+    ],
+    prompts: [
+      { label: '그림체 지정', text: '1번. 한국 조선시대 웹툰으로 해 줘.' },
+    ],
+    checklist: [
+      { id: 'paste', label: '대본 붙여넣기 완료' },
+      { id: 'style', label: '그림체 지정 완료' },
+      { id: 'anchor', label: 'STYLE ANCHOR 영어 문구 출력 확인' },
+    ],
+  },
+  {
+    id: 'image-chapters',
+    phaseId: 'image',
+    title: '챕터 수 40 지정',
+    summary: '영상이 2시간이든 3시간이든 이미지는 40장이면 충분하다.',
+    timestamp: '31:00',
+    tools: ['claude'],
+    duration: '1분',
+    keyPoint:
+      '시청자는 대부분 화면을 보지 않고 듣는다. 60장, 100장으로 늘려봐도 차이가 없다는 결론. 중요한 데(썸네일·인트로)에 힘을 쓴다.',
+    actions: [
+      '챕터 수를 물어보면 40이라고 입력한다.',
+      '화풍 추출이 진행되며, 지정한 그림체가 AI가 읽는 영어 표현으로 변환된다.',
+    ],
+    prompts: [{ label: '개수 지정', text: '마흔 장으로 해 줘.' }],
+    checklist: [
+      { id: 'ch', label: '장면 40개 지정' },
+      { id: 'chars', label: '인물 고정 프롬프트(Step 1) 출력 확인' },
+    ],
+  },
+  {
+    id: 'image-characters',
+    phaseId: 'image',
+    title: 'Flow에서 인물 5명 고정',
+    summary: 'Step1에서 나온 인물 프롬프트로 캐릭터 이미지를 만들고 이름을 붙여 저장한다.',
+    timestamp: '33:33',
+    tools: ['claude', 'flow'],
+    duration: '10분',
+    keyPoint:
+      'AI에 그냥 그려달라고 하면 매번 다르게 그린다. 시청자가 화면을 안 본다 해도 주인공 얼굴이 계속 바뀌면 안 되므로 메인 캐릭터를 고정한다.',
+    actions: [
+      'Claude가 만든 Step1(인물 모양) 프롬프트를 확인한다. 영어로 길게 나오지만 읽을 필요는 없다.',
+      'Flow에 구글 계정으로 로그인하고 새 프로젝트를 만든다.',
+      '캐릭터 탭으로 들어가 프롬프트를 붙여넣는다. 프롬프트는 더블 클릭하면 전체 선택된다.',
+      '모델은 Nano Banana 2를 선택한다. (Lite/Pro보다 2가 가장 좋다)',
+      '이미지가 나오면 인물 이름을 붙여 저장한다. 5명 모두 반복한다.',
+    ],
+    checklist: [
+      { id: 'flow-login', label: 'Flow 새 프로젝트 생성' },
+      {
+        id: 'model',
+        label: '모델 Nano Banana 2 선택',
+        warning: 'Lite/Pro도 있지만 2가 가장 결과가 좋다.',
+      },
+      { id: 'chars', label: '인물 5명 이미지 생성 + 이름 붙여 저장' },
+    ],
+    widgets: ['characterVault'],
+  },
+  {
+    id: 'image-scenes',
+    phaseId: 'image',
+    title: '40장면 프롬프트 받기',
+    summary: '대본을 40토막으로 자르고 각 장면의 이미지 프롬프트를 생성한다.',
+    timestamp: '32:25',
+    tools: ['claude'],
+    duration: '5분',
+    keyPoint:
+      'H(강도 높음) 8개 · M 16개 · L 16개로 나뉜다. 균등하게 자르면 이미지가 평범해지므로 중요한 장면에 편차를 준 것이다. 원리는 몰라도 된다.',
+    actions: [
+      '계속 진행하면 40개 장면 프롬프트가 나온다.',
+      '각 줄은 `번호. [등급] @인물` 형식이고, 장면 사이는 --- 로 구분된다.',
+      'H 8개 / M 16개 / L 16개로 강도가 배분된다. 중요한 장면일수록 짧은 구간을 덮는다.',
+      '프롬프트 전체를 복사해 아래 장면 관리함에 붙여넣는다. 자동으로 40개로 분리된다.',
+    ],
+    prompts: [{ label: '장면 요청', text: '인물 다섯 명 다 저장했어. 장면 뽑아 줘.' }],
+    checklist: [
+      { id: 'scenes', label: '40장면 프롬프트 생성 완료' },
+      { id: 'imported', label: '장면 관리함에 불러오기 완료' },
+      { id: 'ratio', label: 'H 8 / M 16 / L 16 배분 확인' },
+    ],
+    widgets: ['sceneQueue'],
+  },
+  {
+    id: 'image-batch',
+    phaseId: 'image',
+    title: '이미지 40장 배치 생성',
+    summary: '이미지당 2분 간격으로 40장. 약 80분 걸리니 돌려놓고 다른 일을 한다.',
+    timestamp: '38:38',
+    tools: ['flow'],
+    duration: '약 80분 (대기)',
+    keyPoint:
+      '생성 자체는 1장에 1분이지만 2분 간격을 권장한다. Flow가 무료로 풀어준 자원이라 과하게 쓰면 제한이 걸린다. 하루 2개 영상 분량은 충분히 만들 수 있다.',
+    actions: [
+      'Flow Helper를 쓰거나, 아래 큐를 이용해 프롬프트를 하나씩 Flow에 붙여넣는다.',
+      'Flow Helper를 쓸 경우 URL의 프로젝트 ID가 현재 프로젝트와 맞는지 확인한다.',
+      '@인물 태그가 실제로 반영됐는지 중간중간 확인한다. 간혹 태그가 빠진다.',
+      '태그가 빠졌으면 그 장면만 다시 생성한다.',
+      '생성된 이미지를 번호 순서대로 저장한다.',
+    ],
+    checklist: [
+      {
+        id: 'tags',
+        label: '@인물 태그 누락 여부를 확인했다',
+        warning: '강의에서 실제로 태그가 빠진 사례가 나온다. 인물이 안 들어가면 얼굴이 바뀐다.',
+      },
+      { id: 'all40', label: '이미지 40장 생성 및 번호 순 저장 완료' },
+    ],
+    widgets: ['sceneQueue'],
+  },
+
+  // ─────────────────────────── Phase 3: 인트로 ───────────────────────────
+  {
+    id: 'intro-prompt',
+    phaseId: 'intro',
+    title: 'Claude로 인트로 씬 4개 설계',
+    summary: '"민담 인트로" 프로젝트에 재료 3개를 넣으면 Scene 1~4가 나온다.',
+    timestamp: '39:22',
+    tools: ['claude'],
+    duration: '5분',
+    keyPoint:
+      'Grok과 직접 대화해서 고치지 않는다. 사람 말을 더 잘 알아듣는 Claude에서 프롬프트를 고치고, 그 결과물을 Grok에 다시 넣는다.',
+    actions: [
+      '"민담 인트로" 프로젝트에서 새 대화를 시작한다.',
+      '재료 1: 이미지 단계에서 나온 인물 프롬프트',
+      '재료 2: 대본 단계에서 나온 썸네일 브리프',
+      '재료 3: 확정한 인트로 대본 부분',
+      '이 3개를 넣으면 Scene 1~4가 나온다. 각 씬마다 대사 · 등장인물 · 이미지 프롬프트가 붙는다.',
+    ],
+    prompts: [
+      {
+        label: '재료 3개 투입 (한 번에)',
+        text: `아래 세 가지를 줄게. 인트로 네 컷 설계해 줘.
+
+[1. 인물 고정 프롬프트]
+(이미지 프로젝트 관문 3 산출물을 여기에 붙여넣기)
+
+[2. 썸네일 브리프]
+(대본 프로젝트 관문 8 산출물을 여기에 붙여넣기)
+
+[3. 인트로 대본]
+(확정한 인트로 대사와 나레이션을 여기에 붙여넣기)`,
+      },
+    ],
+    checklist: [
+      { id: 'mat1', label: '인물 프롬프트 투입' },
+      { id: 'mat2', label: '썸네일 브리프 투입' },
+      { id: 'mat3', label: '인트로 대본 투입' },
+      { id: 'scenes', label: 'Scene 1~4 생성 확인 (대사·감정지시·이미지프롬프트·영상변환지시)' },
+    ],
+  },
+  {
+    id: 'intro-grok',
+    phaseId: 'intro',
+    title: 'Grok에서 이미지 → 6초 영상',
+    summary: '16:9 이미지를 만들고 그대로 6초 비디오로 변환한다. 립싱크가 붙는다.',
+    timestamp: '40:25',
+    tools: ['grok'],
+    duration: '15분',
+    keyPoint: 'Grok을 쓰는 이유는 한국어 대사와 입 모양(립싱크)을 가장 잘 맞추고, 저렴하기 때문이다.',
+    actions: [
+      'Grok에서 이미지 모드로 들어가 비율을 16:9로 설정한다. 개수는 auto.',
+      'Scene의 이미지 프롬프트를 붙여넣는다.',
+      'Flow에서 저장한 인물 레퍼런스 이미지를 해당 인물에 맞춰 첨부한다.',
+      '이미지가 나오면 전체 선택 후 비디오로 변환한다. 길이는 6초.',
+      'Scene 1~4를 모두 같은 방식으로 만든다.',
+    ],
+    checklist: [
+      { id: 'ratio', label: '비율 16:9 설정' },
+      { id: 'refs', label: '인물 레퍼런스 이미지 첨부' },
+      { id: 'videos', label: '인트로 영상 4개 생성 완료 (각 6초)' },
+    ],
+  },
+  {
+    id: 'intro-revise',
+    phaseId: 'intro',
+    title: '인트로 다듬기 ★',
+    summary: '마음에 안 들면 Claude로 돌아가 프롬프트를 고친 뒤 Grok에 다시 넣는다.',
+    timestamp: '41:09',
+    tools: ['claude', 'grok'],
+    duration: '가변',
+    judgment: true,
+    keyPoint:
+      '인트로는 소개팅 첫 만남이다. 썸네일에서 본 이미지와 첫인상이 일치해야 계속 본다. 여기 쓰는 시간은 아끼지 않는다.',
+    actions: [
+      '영상을 재생해 대사 톤이 의도와 맞는지 확인한다.',
+      '어긋나면 Claude에서 말투를 지정해 프롬프트를 수정한다.',
+      '수정된 프롬프트를 Grok에 다시 넣는다. Grok과 직접 협상하지 않는다.',
+      '썸네일 카피와 인트로 첫인상이 같은 방향인지 교차 확인한다.',
+    ],
+    prompts: [
+      {
+        label: '말투 수정',
+        text: 'Scene 1의 대사 톤이 약해. 차갑게 내리누르는 쪽으로, 화를 겉으로 드러내지 않는 방향으로 감정 지시와 표정 서술을 고쳐 줘. 프롬프트 전체를 다시 줘.',
+      },
+      {
+        label: '움직임 과다',
+        text: 'Grok 결과에서 손이 깨져 나와. 허용 움직임을 줄이고 손동작 지시를 빼 줘.',
+      },
+      {
+        label: '대사 길이 조정',
+        text: '대사가 6초에 안 맞아. 스물다섯 자 안쪽으로 줄여 줘. 뜻은 유지해.',
+      },
+    ],
+    checklist: [
+      { id: 'tone', label: '대사 톤이 의도와 맞다' },
+      { id: 'match', label: '썸네일과 인트로의 첫인상이 일치한다' },
+    ],
+  },
+
+  // ─────────────────────────── Phase 4: 썸네일 ───────────────────────────
+  {
+    id: 'thumb-copy',
+    phaseId: 'thumbnail',
+    title: '카피 후보 받고 고르기 ★',
+    summary: '"민담 썸네일" 프로젝트에 재료를 넣고 카피를 추천받아 하나를 고른다.',
+    timestamp: '42:04',
+    tools: ['claude'],
+    duration: '15분',
+    judgment: true,
+    keyPoint:
+      '카피는 썸네일에 들어가는 글자다. 여기서 선택을 못 받으면 영상을 보지도 않는다. 내 영상이 얼마나 좋은지는 전혀 중요하지 않다.',
+    actions: [
+      '"민담 썸네일" 프로젝트에서 새 대화를 시작한다.',
+      '썸네일 브리프 + 인물 프롬프트를 넣는다.',
+      '"카피 추천해 줘"라고 입력한다.',
+      '나온 옵션들 중 궁금증이 가장 큰 것을 고른다. 사장이 직원 시안을 고르는 감각.',
+      '고르면 그에 맞는 영어 이미지 프롬프트가 나온다.',
+    ],
+    prompts: [
+      {
+        label: '재료 2개 투입 + 카피 요청',
+        text: `아래 두 가지를 줄게. 카피 추천해 줘.
+
+[1. 썸네일 브리프]
+(대본 프로젝트 관문 8 산출물을 여기에 붙여넣기)
+
+[2. 인물 고정 프롬프트]
+(이미지 프로젝트 관문 3 산출물을 여기에 붙여넣기)`,
+      },
+      { label: '카피 선택', text: '3번으로 확정. 배경 이미지 프롬프트 만들어 줘.' },
+      {
+        label: '다시 뽑기',
+        text: '여덟 개 다 약해. 다시 뽑아 줘. 읽고 나서 "왜?"가 즉시 떠오르는 쪽으로, 열두 자 안쪽으로.',
+      },
+    ],
+    checklist: [
+      { id: 'mats', label: '썸네일 브리프 + 인물 프롬프트 투입' },
+      { id: 'copies', label: '카피 후보 8개를 아래에 기록했다' },
+      { id: 'chosen', label: '최종 카피 1개 선택' },
+      {
+        id: 'len',
+        label: '선택한 카피가 18자 이내인지 확인',
+        warning: '길면 휴대전화 엄지손톱 크기에서 읽히지 않는다.',
+      },
+    ],
+    widgets: ['thumbnailCopy'],
+  },
+  {
+    id: 'thumb-image',
+    phaseId: 'thumbnail',
+    title: 'Flow에서 썸네일 이미지 생성',
+    summary: 'Claude가 만든 영어 프롬프트를 Flow에 붙여넣는다.',
+    timestamp: '42:52',
+    tools: ['flow'],
+    duration: '5분',
+    keyPoint: '이미지 생성에 시간이 걸리므로, 이미지 40장을 돌리는 동안 함께 진행하면 효율적이다.',
+    actions: [
+      '선택한 카피에 맞춰 나온 영어 이미지 프롬프트를 복사한다.',
+      'Flow에 붙여넣어 썸네일 이미지를 생성한다.',
+      '이미지를 다운로드한다. 글자는 아직 없는 상태다.',
+    ],
+    checklist: [
+      { id: 'gen', label: '썸네일 이미지 생성' },
+      { id: 'dl', label: '이미지 다운로드' },
+    ],
+  },
+  {
+    id: 'thumb-text',
+    phaseId: 'thumbnail',
+    title: '미리캔버스에서 카피 입히기',
+    summary: '흰 글자 + 외곽선 50 + 옛 서체 + 채도 최대. JPG로 저장.',
+    timestamp: '43:11',
+    tools: ['miricanvas'],
+    duration: '10분',
+    keyPoint:
+      '핸드폰 작은 화면에서 눈에 튀어야 한다. 채도 슬라이더는 끝까지 밀고, 밝은색을 쓴다.',
+    actions: [
+      '미리캔버스 → 워크스페이스 → 디자인 만들기 → 유튜브 썸네일 크기 선택.',
+      'Flow에서 받은 이미지를 업로드해 캔버스를 꽉 채운다.',
+      '텍스트를 추가하고 선택한 카피를 입력한다.',
+      '글자 전체를 흰색으로 바꾼다.',
+      '외곽선을 약 50으로 준다.',
+      '서체를 옛날 느낌으로 바꾼다. (예: 수정해정체)',
+      '강조 색은 채도를 끝까지 밀고 밝은색으로 맞춘다. 민담에서 흔히 쓰는 형광 계열.',
+      'JPG로 다운로드한다.',
+    ],
+    checklist: [
+      { id: 'size', label: '썸네일 크기로 캔버스 생성' },
+      { id: 'white', label: '글자 흰색 + 외곽선 약 50' },
+      { id: 'font', label: '옛 느낌 서체 적용' },
+      {
+        id: 'sat',
+        label: '강조색 채도를 최대로 밀었다',
+        warning: '채도가 낮으면 작은 화면에서 묻힌다.',
+      },
+      { id: 'jpg', label: 'JPG로 저장', warning: 'PNG가 아니라 JPG로 받는다.' },
+    ],
+  },
+
+  // ─────────────────────────── Phase 5: Vrew ───────────────────────────
+  {
+    id: 'vrew-tts',
+    phaseId: 'assemble',
+    title: 'Vrew — 대본을 1만자씩 넣어 음성 만들기',
+    summary: 'AI 목소리로 시작하기 → 1만자씩 붙여넣고 클립 추가를 반복한다.',
+    timestamp: '44:57',
+    tools: ['vrew'],
+    duration: '20분',
+    keyPoint:
+      'Vrew는 한 번에 1만자만 받는다. 46,000자면 5번 나눠 넣어야 한다. 아래 분할기가 경계를 문장 단위로 잘라준다.',
+    actions: [
+      'Vrew에서 새로 만들기 → "AI 목소리로 시작하기"를 선택한다.',
+      '아래 분할기로 대본을 1만자 단위로 나눈다.',
+      '1번 조각을 붙여넣는다.',
+      '아래로 스크롤해 마우스를 올리면 "클립 추가"가 나온다. 다시 AI 목소리를 선택하고 2번 조각을 넣는다.',
+      '조각이 끝날 때까지 반복한다.',
+    ],
+    checklist: [
+      { id: 'start', label: 'AI 목소리로 시작하기 선택' },
+      { id: 'chunks', label: '모든 조각 투입 완료' },
+      { id: 'audio', label: '음성 생성 확인' },
+      {
+        id: 'voice',
+        label: '목소리를 끝까지 같은 것으로 유지',
+        warning: '중간에 목소리가 바뀌면 듣는 사람이 즉시 알아챈다.',
+      },
+    ],
+    widgets: ['scriptChunker', 'promptLibraryVrew'],
+  },
+  {
+    id: 'vrew-intro',
+    phaseId: 'assemble',
+    title: '인트로 영상 4개 배치 + 소리 제거',
+    summary: 'Grok 영상을 대본 위치에 맞춰 넣고, 원본 오디오를 끈다.',
+    timestamp: '46:05',
+    tools: ['vrew'],
+    duration: '10분',
+    keyPoint:
+      'Grok 영상에는 이미 목소리가 들어있다. Vrew TTS와 겹치므로 인트로 구간은 Grok 소리를 쓰고 나머지는 끄는 식으로 정리한다.',
+    actions: [
+      '대본의 인트로 구간을 찾아 해당 위치에 Grok 영상 1~4를 순서대로 넣는다.',
+      '넣은 클립을 전체 선택하고 소리 아이콘을 눌러 원본 오디오를 제거한다.',
+      '대사 타이밍과 영상 위치를 맞춘다.',
+      '재생해서 인트로가 자연스럽게 이어지는지 확인한다.',
+    ],
+    checklist: [
+      { id: 'placed', label: '인트로 영상 4개 배치' },
+      { id: 'muted', label: '중복되는 원본 오디오 제거' },
+      { id: 'sync', label: '대사와 화면 타이밍 확인' },
+    ],
+  },
+  {
+    id: 'vrew-agent',
+    phaseId: 'assemble',
+    title: 'Vrew 에이전트로 이미지 40장 자동 배치',
+    summary: '명령어 + 40장면 대본 + 이미지 40장을 주면 위치를 맞춰 알아서 넣는다.',
+    timestamp: '47:28',
+    tools: ['vrew'],
+    duration: '10분',
+    keyPoint:
+      '40장을 손으로 넣지 않는다. 이미지 단계에서 쓴 40장면 분할 대본이 여기서 위치 기준으로 쓰인다.',
+    actions: [
+      'Vrew 에이전트를 연다.',
+      '아래 배치 명령어를 붙여넣는다.',
+      '이미지 단계에서 쓴 40장면 분할 대본을 함께 넣는다.',
+      '생성한 이미지 40장을 전부 첨부한다. 파일명은 01부터 40까지 두 자리로 통일해 둔다.',
+      '실행하면 각 대본 위치부터 다음 대본 전까지 이미지가 배치되고 화면 효과까지 들어간다.',
+      'Ctrl+A로 전체 선택해 빈 구간이 없는지 확인한다.',
+    ],
+    checklist: [
+      { id: 'cmd', label: '배치 명령어 입력' },
+      { id: 'scenes', label: '40장면 분할 대본 투입' },
+      {
+        id: 'imgs',
+        label: '이미지 40장 첨부 (파일명 01~40 두 자리)',
+        warning: '파일명 번호가 장면 번호와 어긋나면 엉뚱한 위치에 배치된다.',
+      },
+      { id: 'verify', label: '빈 구간 없는지 확인' },
+    ],
+    widgets: ['promptLibraryVrew'],
+  },
+  {
+    id: 'vrew-export',
+    phaseId: 'assemble',
+    title: '내보내기',
+    summary: '영상 파일로 내보낸다.',
+    timestamp: '48:23',
+    tools: ['vrew'],
+    duration: '가변',
+    actions: [
+      '전체를 한 번 훑어 재생하며 빈 구간이 없는지 확인한다.',
+      '내보내기를 실행한다.',
+    ],
+    checklist: [
+      { id: 'review', label: '전체 검토 완료' },
+      { id: 'export', label: '영상 파일 내보내기 완료' },
+    ],
+  },
+
+  // ─────────────────────────── Phase 6: 업로드 ───────────────────────────
+  {
+    id: 'publish-disclosure',
+    phaseId: 'publish',
+    title: 'AI 제작 표시 (필수)',
+    summary: '영상 화면에 문구를 넣고, YouTube 업로드 설정에서도 AI 제작을 체크한다.',
+    timestamp: '11:37',
+    tools: ['vrew', 'youtube'],
+    duration: '5분',
+    keyPoint:
+      '두 곳 모두 표기하는 게 안전하다. YouTube 설정에만 하면 시청자가 모를 수 있어 화면에도 한 번 더 알린다.',
+    actions: [
+      '영상 도입부 화면에 "AI를 활용해 제작한 창작물입니다" 문구를 넣는다.',
+      'YouTube 업로드 시 "변경된 콘텐츠 또는 합성 콘텐츠" 항목을 체크한다.',
+    ],
+    checklist: [
+      { id: 'onscreen', label: '영상 화면에 고지 문구 삽입' },
+      {
+        id: 'setting',
+        label: 'YouTube 업로드 설정에서 AI 제작 표시 체크',
+        warning: '누락하면 정책 위반 소지가 생긴다.',
+      },
+    ],
+    widgets: ['disclosure'],
+  },
+  {
+    id: 'publish-upload',
+    phaseId: 'publish',
+    title: '업로드',
+    summary: '영상 + 썸네일 JPG를 올린다.',
+    timestamp: '48:23',
+    tools: ['youtube'],
+    duration: '10분',
+    keyPoint:
+      '롱폼이므로 중간광고를 켠다. 수익은 조회수가 쌓이는 대로 계속 올라간다. 한 달간 업로드가 없어도 기존 영상에서 수익이 발생한다.',
+    actions: [
+      '영상 파일을 업로드한다.',
+      '썸네일에 미리캔버스에서 받은 JPG를 지정한다.',
+      '제목은 선택한 카피 방향과 일치시킨다.',
+      '중간광고를 활성화한다.',
+    ],
+    checklist: [
+      { id: 'video', label: '영상 업로드' },
+      { id: 'thumb', label: '썸네일 JPG 지정' },
+      { id: 'ads', label: '중간광고 활성화' },
+    ],
+  },
+  {
+    id: 'publish-scale',
+    phaseId: 'publish',
+    title: '다채널로 확장',
+    summary: '이 방식은 필연적으로 여러 채널을 운영하게 된다. 브랜드 채널로 늘린다.',
+    timestamp: '13:20',
+    tools: ['youtube'],
+    duration: '지속',
+    keyPoint:
+      '하나의 구글 계정에서 브랜드 채널로 여러 개를 운영할 수 있고, 이 자체로 제재받지 않는다. 강의 진행자는 계정 기준 여러 개, 채널 기준 수십 개를 운영한다.',
+    actions: [
+      '브랜드 채널을 추가해 채널 수를 늘린다.',
+      '채널별 업로드 수와 수익 창출 승인 여부를 기록해 관리한다.',
+      '수익 창출 정지가 오면 항소로 풀 수 있다. 채널 삭제와는 다른 문제다.',
+    ],
+    checklist: [
+      { id: 'second', label: '두 번째 채널 개설' },
+      {
+        id: 'log',
+        label: '채널별 상태를 아래 표에 기록',
+        warning: '완전 자동화(클릭 한 번으로 영상까지)는 삭제 사유다. 사람의 선택 단계를 유지한다.',
+      },
+    ],
+    widgets: ['channelTracker'],
+  },
+];
+
+/** 페이즈별 단계 묶기 */
+export function stepsByPhase(phaseId: string): Step[] {
+  return STEPS.filter((s) => s.phaseId === phaseId);
+}
+
+export function findStep(id: string): Step | undefined {
+  return STEPS.find((s) => s.id === id);
+}
