@@ -187,9 +187,13 @@ describe('워크플로우 통합', () => {
     expect(s?.judgment).toBe(true);
   });
 
-  it('정책 단계에 3개 위젯이 붙어 있다', () => {
+  it('정책 단계에 리스크 위젯이 붙어 있다', () => {
     const s = findStep('policy-check');
-    expect(s?.widgets).toEqual(['policyRisk', 'lectureDiscrepancies', 'realityCheck']);
+    expect(s?.widgets).toContain('policyRisk');
+    expect(s?.widgets).toContain('lectureDiscrepancies');
+    expect(s?.widgets).toContain('realityCheck');
+    // 계획만 세우면 지켜지지 않으므로 이력 도구도 함께 붙인다
+    expect(s?.widgets).toContain('episodeHistory');
   });
 
   it('전체 단계가 28개다', () => {
@@ -205,6 +209,43 @@ describe('워크플로우 통합', () => {
     for (const s of STEPS) {
       expect(ids.has(s.phaseId), `${s.id}의 phaseId "${s.phaseId}"가 없다`).toBe(true);
     }
+  });
+
+  it('대본 생성 단계에 TTS 검사기와 백업이 붙어 있다', () => {
+    const s = findStep('script-generate');
+    expect(s?.widgets).toContain('scriptChecker');
+    expect(s?.widgets).toContain('dataBackup');
+  });
+
+  it('Vrew TTS 단계에서 넣기 전 검사를 요구한다', () => {
+    const s = findStep('vrew-tts');
+    expect(s?.widgets).toContain('scriptChecker');
+    expect(s?.checklist.some((c) => c.id === 'checked')).toBe(true);
+  });
+
+  it('줄거리 단계에 이력 도구가 붙어 있다', () => {
+    const s = findStep('script-outline');
+    expect(s?.widgets).toContain('episodeHistory');
+  });
+
+  it('줄거리 단계가 구조 겹침 확인을 요구한다', () => {
+    const s = findStep('script-outline');
+    const ids = s?.checklist.map((c) => c.id) ?? [];
+    expect(ids).toContain('variant');
+    expect(ids).toContain('record');
+  });
+
+  it('다채널 단계에 이력과 백업이 붙어 있다', () => {
+    const s = findStep('publish-scale');
+    expect(s?.widgets).toContain('episodeHistory');
+    expect(s?.widgets).toContain('dataBackup');
+  });
+
+  it('대본 생성 단계가 백업을 요구한다', () => {
+    const s = findStep('script-generate');
+    const backup = s?.checklist.find((c) => c.id === 'backup');
+    expect(backup).toBeDefined();
+    expect(backup?.warning).toMatch(/사라진|유실|지우면/);
   });
 });
 

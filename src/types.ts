@@ -4,6 +4,10 @@
  * 사용자가 각 단계에서 만든 산출물을 보관하기 위한 모델.
  */
 
+import type { EpisodeRecord } from './lib/episodeHistory';
+
+export type { EpisodeRecord };
+
 /** 강의에서 사용하는 외부 도구 식별자 */
 export type ToolId = 'claude' | 'flow' | 'grok' | 'vrew' | 'miricanvas' | 'youtube';
 
@@ -48,7 +52,10 @@ export type StepWidget =
   | 'promptLibraryVrew'
   | 'policyRisk'
   | 'lectureDiscrepancies'
-  | 'realityCheck';
+  | 'realityCheck'
+  | 'scriptChecker'
+  | 'episodeHistory'
+  | 'dataBackup';
 
 /** 워크플로우 한 단계 */
 export interface Step {
@@ -178,6 +185,8 @@ export interface AppState {
   scenes: SceneItem[];
   thumbnailCopies: ThumbnailCopy[];
   channels: ChannelEntry[];
+  /** 템플릿 반복 방지용 영상 이력 */
+  episodes: EpisodeRecord[];
   /** Vrew 클립당 최대 글자수 */
   chunkSize: number;
   /** 장면 생성 간 대기 시간(초) */

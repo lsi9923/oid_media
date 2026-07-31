@@ -28,6 +28,7 @@ export function createInitialState(): AppState {
     scenes: [],
     thumbnailCopies: [],
     channels: [],
+    episodes: [],
     chunkSize: 10000,
     sceneIntervalSec: 120,
   };
@@ -66,6 +67,7 @@ export function loadState(): AppState {
       scenes: Array.isArray(parsed.scenes) ? parsed.scenes : [],
       thumbnailCopies: Array.isArray(parsed.thumbnailCopies) ? parsed.thumbnailCopies : [],
       channels: Array.isArray(parsed.channels) ? parsed.channels : [],
+      episodes: Array.isArray(parsed.episodes) ? parsed.episodes : [],
       // 삭제된 단계 id가 저장돼 있으면 첫 단계로 되돌린다.
       activeStepId: STEPS.some((s) => s.id === parsed.activeStepId)
         ? (parsed.activeStepId as string)

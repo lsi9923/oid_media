@@ -89,8 +89,13 @@ export const STEPS: Step[] = [
         warning: '"all or any of your accounts"에 수익화 정지가 적용될 수 있다.',
       },
       { id: 'reality', label: '한국 CPM 수준을 확인하고 기대 수익을 조정했다' },
+      {
+        id: 'history',
+        label: '영상마다 구조를 기록해 반복을 피하기로 했다',
+        warning: '계획만 세우면 지켜지지 않는다. 아래 이력 도구로 관리하는 편이 낫다.',
+      },
     ],
-    widgets: ['policyRisk', 'lectureDiscrepancies', 'realityCheck'],
+    widgets: ['policyRisk', 'lectureDiscrepancies', 'realityCheck', 'episodeHistory'],
   },
 
   // ─────────────────────────── Phase 0: 세팅 ───────────────────────────
@@ -311,26 +316,45 @@ export const STEPS: Step[] = [
   {
     id: 'script-outline',
     phaseId: 'script',
-    title: '줄거리 · 반전 6개 · 감동 포인트',
-    summary: '읽지 않아도 된다. AI가 긴 글을 쓰면서 앞 내용을 잊지 않게 하는 설계도다.',
+    title: '줄거리 · 반전 · 골격 변주',
+    summary:
+      '내용은 읽지 않아도 되지만, 구조가 앞 영상과 겹치는지는 확인해야 합니다. 정책 리스크가 여기서 갈립니다.',
     timestamp: '26:39',
     tools: ['claude'],
-    duration: '5분',
+    duration: '10분',
     keyPoint:
-      '이 산출물(StoryPact)은 챕터마다 다시 참조되는 설명서다. 사람이 검수할 대상이 아니다. 여기 힘을 쓰면 수익화가 늦어진다.',
+      '줄거리 내용은 검수 대상이 아닙니다. 그러나 구조는 다릅니다. 같은 골격·같은 결말을 반복하면 정책이 금지한 "매우 비슷한 줄거리 템플릿"이 됩니다. 아래 이력 도구로 겹침을 확인하세요.',
     actions: [
-      '계속 진행하면 줄거리, 시간순 반전 6개, 감동 포인트가 나온다.',
-      '읽지 말고 그냥 넘긴다.',
-      '반전이 있어야 1~2시간 이야기가 지루해지지 않고, 감동 포인트는 50·60대 시청층을 잡는 장치다.',
+      '프롬프트가 앞 영상 구조를 물어보면, 아래 이력에서 확인해 알려준다.',
+      '적용한 변주(시작점·결말·조력자)가 출력되면 아래 이력에 기록한다.',
+      '줄거리와 반전 내용 자체는 읽지 않고 넘긴다.',
+      '스토리 팩트가 나오면 그것도 넘긴다. AI가 챕터마다 참조하는 설계도다.',
+    ],
+    prompts: [
+      {
+        label: '앞 영상 구조 알려주기',
+        text: '앞 영상은 순차 시작 + 응보 결말 + 초자연 조력자였어. 이번엔 다르게 짜 줘.',
+      },
+      { label: '첫 영상인 경우', text: '첫 영상이야.' },
     ],
     checklist: [
       { id: 'outline', label: '줄거리 생성 완료' },
       {
+        id: 'variant',
+        label: '적용한 변주가 앞 영상과 다른지 확인',
+        warning: '이 확인이 정책 리스크를 줄이는 핵심이다. 내용보다 구조가 중요하다.',
+      },
+      {
+        id: 'record',
+        label: '구조를 아래 이력에 기록',
+      },
+      {
         id: 'skip',
-        label: '내용을 읽지 않고 넘어갔다',
+        label: '줄거리 내용 자체는 읽지 않고 넘어갔다',
         warning: '"이야기가 좀 이상한데?"를 붙잡는 사람이 수익화가 가장 늦다.',
       },
     ],
+    widgets: ['episodeHistory'],
   },
   {
     id: 'script-generate',
@@ -359,12 +383,22 @@ export const STEPS: Step[] = [
       { id: 'chapters', label: '아홉 챕터 모두 생성' },
       { id: 'script', label: '대본 전문 저장 (목표 46,000자 내외)' },
       {
+        id: 'check',
+        label: 'TTS 검사에서 오류 0건 확인',
+        warning: '한자·영문·괄호가 남아 있으면 TTS가 그대로 읽거나 깨진다.',
+      },
+      {
+        id: 'backup',
+        label: '대본을 파일로 내보내 백업',
+        warning: '브라우저에만 저장되므로 데이터를 지우면 15~20분 들인 대본이 사라진다.',
+      },
+      {
         id: 'brief',
         label: '썸네일 브리프 별도 저장',
         warning: '인트로·썸네일 단계에서 반드시 다시 필요하다. 지금 챙겨두지 않으면 되돌아와야 한다.',
       },
     ],
-    widgets: ['scriptVault'],
+    widgets: ['scriptVault', 'scriptChecker', 'dataBackup'],
   },
 
   // ─────────────────────────── Phase 2: 이미지 ───────────────────────────
@@ -711,6 +745,11 @@ export const STEPS: Step[] = [
     ],
     checklist: [
       { id: 'start', label: 'AI 목소리로 시작하기 선택' },
+      {
+        id: 'checked',
+        label: 'TTS 검사에서 오류 0건 확인',
+        warning: '금지 표기가 남아 있으면 음성을 다시 만들어야 한다. 넣기 전에 확인한다.',
+      },
       { id: 'chunks', label: '모든 조각 투입 완료' },
       { id: 'audio', label: '음성 생성 확인' },
       {
@@ -719,7 +758,7 @@ export const STEPS: Step[] = [
         warning: '중간에 목소리가 바뀌면 듣는 사람이 즉시 알아챈다.',
       },
     ],
-    widgets: ['scriptChunker', 'promptLibraryVrew'],
+    widgets: ['scriptChecker', 'scriptChunker', 'promptLibraryVrew'],
   },
   {
     id: 'vrew-intro',
@@ -860,8 +899,14 @@ export const STEPS: Step[] = [
         label: '채널별 상태를 아래 표에 기록',
         warning: '완전 자동화(클릭 한 번으로 영상까지)는 삭제 사유다. 사람의 선택 단계를 유지한다.',
       },
+      {
+        id: 'episode',
+        label: '이 영상의 구조를 이력에 기록',
+        warning: '기록해두지 않으면 다음 영상에서 같은 템플릿을 쓰게 된다.',
+      },
+      { id: 'backup', label: '작업 내용 백업' },
     ],
-    widgets: ['channelTracker'],
+    widgets: ['channelTracker', 'episodeHistory', 'dataBackup'],
   },
 ];
 

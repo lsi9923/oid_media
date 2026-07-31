@@ -13,6 +13,7 @@ import type {
   CharacterRef,
   ClaudeProjectKey,
   ClaudeProjectState,
+  EpisodeRecord,
   SceneItem,
   ThumbnailCopy,
 } from '../types';
@@ -29,6 +30,8 @@ type Action =
   | { type: 'setScenes'; scenes: SceneItem[] }
   | { type: 'setThumbnailCopies'; copies: ThumbnailCopy[] }
   | { type: 'setChannels'; channels: ChannelEntry[] }
+  | { type: 'setEpisodes'; episodes: EpisodeRecord[] }
+  | { type: 'import'; state: AppState }
   | { type: 'reset' };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -75,6 +78,47 @@ function reducer(state: AppState, action: Action): AppState {
     case 'setChannels':
       return { ...state, channels: action.channels };
 
+    case 'setEpisodes':
+      return { ...state, episodes: action.episodes };
+
+    case 'import': {
+      // 알 수 없는 필드나 잘못된 타입으로 앱이 깨지지 않도록 기본값과 병합하며 검사한다
+      const base = createInitialState();
+      const s = action.state;
+      const str = (v: unknown, d: string) => (typeof v === 'string' ? v : d);
+      const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+
+      return {
+        ...base,
+        ...s,
+        version: base.version,
+        projectTitle: str(s.projectTitle, base.projectTitle),
+        category: str(s.category, base.category),
+        topic: str(s.topic, base.topic),
+        introLine: str(s.introLine, base.introLine),
+        artStyle: str(s.artStyle, base.artStyle),
+        script: str(s.script, base.script),
+        thumbnailBrief: str(s.thumbnailBrief, base.thumbnailBrief),
+        targetMinutes: num(s.targetMinutes, base.targetMinutes),
+        chunkSize: num(s.chunkSize, base.chunkSize),
+        sceneIntervalSec: num(s.sceneIntervalSec, base.sceneIntervalSec),
+        claudeProjects: { ...base.claudeProjects, ...(s.claudeProjects ?? {}) },
+        checks:
+          typeof s.checks === 'object' && s.checks !== null ? { ...s.checks } : { ...base.checks },
+        completedSteps: Array.isArray(s.completedSteps)
+          ? s.completedSteps.filter((x): x is string => typeof x === 'string')
+          : [],
+        characters: Array.isArray(s.characters) ? s.characters : [],
+        scenes: Array.isArray(s.scenes) ? s.scenes : [],
+        thumbnailCopies: Array.isArray(s.thumbnailCopies) ? s.thumbnailCopies : [],
+        channels: Array.isArray(s.channels) ? s.channels : [],
+        episodes: Array.isArray(s.episodes) ? s.episodes : [],
+        activeStepId: STEPS.some((x) => x.id === s.activeStepId)
+          ? s.activeStepId
+          : base.activeStepId,
+      };
+    }
+
     case 'reset':
       return createInitialState();
 
@@ -97,6 +141,8 @@ interface StoreValue {
   setScenes: (scenes: SceneItem[]) => void;
   setThumbnailCopies: (copies: ThumbnailCopy[]) => void;
   setChannels: (channels: ChannelEntry[]) => void;
+  setEpisodes: (episodes: EpisodeRecord[]) => void;
+  importState: (state: AppState) => void;
   reset: () => void;
   /** 전체 진행률 0~100 */
   progress: number;
@@ -168,6 +214,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'setChannels', channels });
   }, []);
 
+  const setEpisodes = useCallback((episodes: EpisodeRecord[]) => {
+    dispatch({ type: 'setEpisodes', episodes });
+  }, []);
+
+  const importState = useCallback((next: AppState) => {
+    dispatch({ type: 'import', state: next });
+  }, []);
+
   const reset = useCallback(() => {
     clearState();
     dispatch({ type: 'reset' });
@@ -204,6 +258,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setScenes,
       setThumbnailCopies,
       setChannels,
+      setEpisodes,
+      importState,
       reset,
       progress,
       stepProgress,
@@ -221,6 +277,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setScenes,
       setThumbnailCopies,
       setChannels,
+      setEpisodes,
+      importState,
       reset,
       progress,
       stepProgress,

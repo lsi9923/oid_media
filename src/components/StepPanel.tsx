@@ -7,6 +7,9 @@ import { ScriptChunker, ScriptVault } from './ScriptTools';
 import { CharacterVault, SceneQueue } from './ImageTools';
 import { PromptLibrary } from './PromptLibrary';
 import { LectureDiscrepancies, PolicyRisk, RealityCheck } from './PolicyRisk';
+import { ScriptChecker } from './ScriptChecker';
+import { EpisodeHistory } from './EpisodeHistory';
+import { DataBackup } from './DataBackup';
 import {
   ChannelTracker,
   CostCalculator,
@@ -54,6 +57,12 @@ function renderWidget(widget: StepWidget) {
       return <LectureDiscrepancies key={widget} />;
     case 'realityCheck':
       return <RealityCheck key={widget} />;
+    case 'scriptChecker':
+      return <ScriptChecker key={widget} />;
+    case 'episodeHistory':
+      return <EpisodeHistory key={widget} />;
+    case 'dataBackup':
+      return <DataBackup key={widget} />;
     default:
       return null;
   }
