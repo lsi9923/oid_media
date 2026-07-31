@@ -6,6 +6,7 @@ import { PromptBox } from './ui';
 import { ScriptChunker, ScriptVault } from './ScriptTools';
 import { CharacterVault, SceneQueue } from './ImageTools';
 import { PromptLibrary } from './PromptLibrary';
+import { LectureDiscrepancies, PolicyRisk, RealityCheck } from './PolicyRisk';
 import {
   ChannelTracker,
   CostCalculator,
@@ -47,6 +48,12 @@ function renderWidget(widget: StepWidget) {
       return <PromptLibrary key={widget} filterProject="민담 썸네일" />;
     case 'promptLibraryVrew':
       return <PromptLibrary key={widget} filterProject="Vrew" />;
+    case 'policyRisk':
+      return <PolicyRisk key={widget} />;
+    case 'lectureDiscrepancies':
+      return <LectureDiscrepancies key={widget} />;
+    case 'realityCheck':
+      return <RealityCheck key={widget} />;
     default:
       return null;
   }

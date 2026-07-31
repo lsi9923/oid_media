@@ -45,7 +45,10 @@ export type StepWidget =
   | 'promptLibraryImage'
   | 'promptLibraryIntro'
   | 'promptLibraryThumbnail'
-  | 'promptLibraryVrew';
+  | 'promptLibraryVrew'
+  | 'policyRisk'
+  | 'lectureDiscrepancies'
+  | 'realityCheck';
 
 /** 워크플로우 한 단계 */
 export interface Step {

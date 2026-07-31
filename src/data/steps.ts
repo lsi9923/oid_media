@@ -7,6 +7,12 @@ import type { Phase, Step } from '../types';
 
 export const PHASES: Phase[] = [
   {
+    id: 'policy',
+    badge: '!',
+    title: '정책 · 리스크',
+    goal: '시작 전에 수익화 정책을 확인한다. 이 방식은 두 범주에 걸릴 소지가 있다.',
+  },
+  {
     id: 'setup',
     badge: '0',
     title: '세팅',
@@ -51,6 +57,42 @@ export const PHASES: Phase[] = [
 ];
 
 export const STEPS: Step[] = [
+  // ─────────────────── Phase !: 정책 · 리스크 ───────────────────
+  {
+    id: 'policy-check',
+    phaseId: 'policy',
+    title: '수익화 정책 확인 ★',
+    summary:
+      'YouTube가 2026년 7월 명시한 수익화 불가 3개 범주 중 두 개가 이 방식과 부딪칩니다. 시작 전에 읽으세요.',
+    timestamp: '12:47',
+    tools: ['youtube'],
+    duration: '15분',
+    judgment: true,
+    keyPoint:
+      '강의는 "이야기니까 픽션이라서 안 걸린다"고 설명하지만, 수익화를 막는 것은 허위정보 정책이 아니라 Inauthentic content 정책이고 여기에는 픽션 면제 조항이 없습니다. 금지 예시에 "여러 영상에 매우 비슷한 줄거리 템플릿"이 그대로 적혀 있습니다.',
+    actions: [
+      '아래 공식 문서 원문과 대응책을 읽는다.',
+      '위험도 높음 3개 항목의 대응책을 어떻게 지킬지 정한다.',
+      '특히 줄거리 템플릿 변주 계획을 세운다. 이것이 가장 큰 위험이다.',
+      '한 계정에 채널을 몇 개까지 둘지 정한다. 제재는 계정 전체로 번질 수 있다.',
+    ],
+    checklist: [
+      { id: 'read', label: '공식 정책 원문 3개 범주를 읽었다' },
+      {
+        id: 'template',
+        label: '줄거리 템플릿을 매번 그대로 쓰지 않기로 계획했다',
+        warning: '이것이 가장 큰 위험이다. 주인공만 바꿔 같은 틀을 반복하면 정책 위반 예시에 정확히 해당한다.',
+      },
+      {
+        id: 'accounts',
+        label: '계정당 채널 수를 정했다',
+        warning: '"all or any of your accounts"에 수익화 정지가 적용될 수 있다.',
+      },
+      { id: 'reality', label: '한국 CPM 수준을 확인하고 기대 수익을 조정했다' },
+    ],
+    widgets: ['policyRisk', 'lectureDiscrepancies', 'realityCheck'],
+  },
+
   // ─────────────────────────── Phase 0: 세팅 ───────────────────────────
   {
     id: 'setup-tools',
