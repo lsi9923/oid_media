@@ -174,12 +174,49 @@ describe('수치 데이터', () => {
 });
 
 describe('워크플로우 통합', () => {
-  it('정책 페이즈가 첫 번째다', () => {
-    expect(PHASES[0]?.id).toBe('policy');
+  it('판단 페이즈가 첫 번째다', () => {
+    // 실행 전에 손익과 니치를 먼저 정하게 한다
+    expect(PHASES[0]?.id).toBe('decide');
   });
 
-  it('정책 단계가 첫 번째 단계다', () => {
-    expect(STEPS[0]?.id).toBe('policy-check');
+  it('정책 페이즈가 두 번째다', () => {
+    expect(PHASES[1]?.id).toBe('policy');
+  });
+
+  it('손익 계산이 첫 번째 단계다', () => {
+    expect(STEPS[0]?.id).toBe('decide-economics');
+  });
+
+  it('판단 페이즈에 손익·니치 두 단계가 있다', () => {
+    const decide = STEPS.filter((s) => s.phaseId === 'decide');
+    expect(decide.map((s) => s.id)).toEqual(['decide-economics', 'decide-niche']);
+  });
+
+  it('판단 단계 둘 다 사람 판단이 필요하다', () => {
+    for (const id of ['decide-economics', 'decide-niche']) {
+      expect(findStep(id)?.judgment, `${id}`).toBe(true);
+    }
+  });
+
+  it('손익 단계에 시뮬레이터와 러닝타임 계산기가 붙어 있다', () => {
+    const s = findStep('decide-economics');
+    expect(s?.widgets).toContain('revenueSimulator');
+    expect(s?.widgets).toContain('runtimeCalculator');
+  });
+
+  it('니치 단계에 진단 도구가 붙어 있다', () => {
+    expect(findStep('decide-niche')?.widgets).toContain('nicheAdvisor');
+  });
+
+  it('인트로 검수 단계에 채점기가 붙어 있다', () => {
+    const s = findStep('script-intro');
+    expect(s?.widgets).toContain('introScorer');
+    expect(s?.checklist.some((c) => c.id === 'scored')).toBe(true);
+  });
+
+  it('썸네일 단계에 가독성 미리보기가 붙어 있다', () => {
+    expect(findStep('thumb-copy')?.widgets).toContain('thumbnailPreview');
+    expect(findStep('thumb-text')?.widgets).toContain('thumbnailPreview');
   });
 
   it('정책 단계가 판단 필요로 표시돼 있다', () => {
@@ -196,12 +233,18 @@ describe('워크플로우 통합', () => {
     expect(s?.widgets).toContain('episodeHistory');
   });
 
-  it('전체 단계가 28개다', () => {
-    expect(STEPS).toHaveLength(28);
+  it('전체 단계가 30개다', () => {
+    expect(STEPS).toHaveLength(30);
   });
 
-  it('페이즈가 8개다', () => {
-    expect(PHASES).toHaveLength(8);
+  it('페이즈가 9개다', () => {
+    expect(PHASES).toHaveLength(9);
+  });
+
+  it('사람 판단이 필요한 단계가 6개다', () => {
+    // 손익, 니치, 인트로 검수, 인트로 다듬기, 썸네일 카피, 정책
+    const judgment = STEPS.filter((s) => s.judgment);
+    expect(judgment).toHaveLength(6);
   });
 
   it('모든 단계의 phaseId가 실제 페이즈를 가리킨다', () => {

@@ -7,10 +7,16 @@ import type { Phase, Step } from '../types';
 
 export const PHASES: Phase[] = [
   {
+    id: 'decide',
+    badge: '?',
+    title: '판단',
+    goal: '시작할지, 어떤 니치로 갈지, 언제부터 남는지를 먼저 정한다.',
+  },
+  {
     id: 'policy',
     badge: '!',
     title: '정책 · 리스크',
-    goal: '시작 전에 수익화 정책을 확인한다. 이 방식은 두 범주에 걸릴 소지가 있다.',
+    goal: '수익화 정책을 확인한다. 이 방식은 두 범주에 걸릴 소지가 있다.',
   },
   {
     id: 'setup',
@@ -57,6 +63,77 @@ export const PHASES: Phase[] = [
 ];
 
 export const STEPS: Step[] = [
+  // ─────────────────── Phase ?: 판단 ───────────────────
+  {
+    id: 'decide-economics',
+    phaseId: 'decide',
+    title: '손익부터 계산 ★',
+    summary:
+      '월 8만원 쓰고 언제부터 남는지, 목표 수입에 얼마나 필요한지 먼저 계산합니다. 이걸 모르고 시작하면 안 됩니다.',
+    timestamp: '03:01',
+    tools: [],
+    duration: '15분',
+    judgment: true,
+    keyPoint:
+      '강의 사례(조회수 6만에 80만원)는 RPM 약 13,000원입니다. 한국 시청자 기반 엔터테인먼트에서 일반적인 수준이 아닙니다. 일반 RPM 2,200원으로 같은 조회수를 넣으면 약 13만원입니다. 여섯 배 차이입니다.',
+    actions: [
+      '아래 시뮬레이터에서 RPM 시나리오를 "일반적"으로 두고 손익분기를 확인한다.',
+      '목표 월수입을 넣어 필요한 조회수를 역산한다.',
+      '시간당 수익을 계산해 본다. 편당 작업 시간을 정직하게 넣는다.',
+      '"강의 사례" 버튼을 눌러 두 경우를 비교한다. 그 차이가 기대치의 폭이다.',
+      '러닝타임 계산기로 46,000자가 실제 몇 시간인지 확인한다.',
+    ],
+    checklist: [
+      { id: 'breakeven', label: '손익분기 조회수를 확인했다' },
+      {
+        id: 'target',
+        label: '목표 월수입에 필요한 조회수를 역산했다',
+        warning: '월 300만원은 일반 RPM 기준 월 140만 조회 이상이 필요하다.',
+      },
+      {
+        id: 'hourly',
+        label: '시간당 수익을 계산했다',
+        warning: '편당 원가는 1~2천원이지만 사람 시간은 공짜가 아니다.',
+      },
+      { id: 'runtime', label: '러닝타임과 중간광고 슬롯을 확인했다' },
+    ],
+    widgets: ['revenueSimulator', 'runtimeCalculator'],
+  },
+  {
+    id: 'decide-niche',
+    phaseId: 'decide',
+    title: '니치 선택 ★',
+    summary:
+      '민담이 최선인지 따져봅니다. 강의 진행자 본인이 "만 명 넘게 배웠다"고 밝혔습니다.',
+    timestamp: '09:19',
+    tools: [],
+    duration: '20분',
+    judgment: true,
+    keyPoint:
+      '같은 프롬프트로 같은 구조의 민담을 만 명이 만들고 있다면, 그것 자체가 정책이 말하는 반복 콘텐츠에 가까워지는 조건입니다. 방법론은 다른 니치에도 쓸 수 있고, 니치마다 정책 위험과 광고 단가가 다릅니다.',
+    actions: [
+      '아래 비교표에서 정책 안전성·포화도·광고 단가를 함께 본다.',
+      '수익화가 막히는 니치 두 개(건강 정보, 고전 낭독)를 먼저 제외한다.',
+      '민담을 고르더라도 포화된 니치라는 사실을 알고 시작한다.',
+      '조사 부담을 감당할 수 있다면 포화도가 낮은 쪽이 유리하다.',
+      '고른 니치에 맞춰 대본 프롬프트의 배경·소재 규칙을 조정한다.',
+    ],
+    checklist: [
+      { id: 'compare', label: '니치 비교표를 읽었다' },
+      {
+        id: 'blocked',
+        label: '수익화 불가 니치를 확인했다',
+        warning: 'AI 음성으로 건강·법률·금융·정치 조언은 정책상 수익화가 명시적으로 불가하다.',
+      },
+      {
+        id: 'chosen',
+        label: '니치를 정했고 포화도를 알고 있다',
+        warning: '포화된 니치에 차별점 없이 들어가면 묻힌다.',
+      },
+    ],
+    widgets: ['nicheAdvisor'],
+  },
+
   // ─────────────────── Phase !: 정책 · 리스크 ───────────────────
   {
     id: 'policy-check',
@@ -287,9 +364,15 @@ export const STEPS: Step[] = [
     checklist: [
       { id: 'dialogue', label: '등장인물 대사로 시작한다' },
       { id: 'hook', label: '이유를 모르겠어서 궁금해진다' },
-      { id: 'saved', label: '확정한 인트로 대사를 아래에 저장했다' },
+      {
+        id: 'scored',
+        label: '인트로 채점에서 실패 항목이 없다',
+        warning: '이유를 설명하는 표현이 들어가면 궁금증이 죽는다. 채점기가 잡아준다.',
+      },
+      { id: 'aloud', label: '소리 내어 읽어 보고 판단했다' },
+      { id: 'saved', label: '확정한 인트로 대사를 보관함에 저장했다' },
     ],
-    widgets: ['scriptVault'],
+    widgets: ['introScorer', 'scriptVault'],
   },
   {
     id: 'script-names',
@@ -383,6 +466,11 @@ export const STEPS: Step[] = [
       { id: 'chapters', label: '아홉 챕터 모두 생성' },
       { id: 'script', label: '대본 전문 저장 (목표 46,000자 내외)' },
       {
+        id: 'runtime',
+        label: '러닝타임과 중간광고 슬롯 확인',
+        warning: '46,000자는 보통 두 시간을 넘긴다. 목표 길이와 다를 수 있다.',
+      },
+      {
         id: 'check',
         label: 'TTS 검사에서 오류 0건 확인',
         warning: '한자·영문·괄호가 남아 있으면 TTS가 그대로 읽거나 깨진다.',
@@ -398,7 +486,7 @@ export const STEPS: Step[] = [
         warning: '인트로·썸네일 단계에서 반드시 다시 필요하다. 지금 챙겨두지 않으면 되돌아와야 한다.',
       },
     ],
-    widgets: ['scriptVault', 'scriptChecker', 'dataBackup'],
+    widgets: ['scriptVault', 'scriptChecker', 'runtimeCalculator', 'dataBackup'],
   },
 
   // ─────────────────────────── Phase 2: 이미지 ───────────────────────────
@@ -670,8 +758,13 @@ export const STEPS: Step[] = [
         label: '선택한 카피가 18자 이내인지 확인',
         warning: '길면 휴대전화 엄지손톱 크기에서 읽히지 않는다.',
       },
+      {
+        id: 'preview',
+        label: '168px 크기에서 읽히는지 확인',
+        warning: '가장 작게 노출되는 자리에서 안 읽히면 클릭이 일어나지 않는다.',
+      },
     ],
-    widgets: ['thumbnailCopy'],
+    widgets: ['thumbnailCopy', 'thumbnailPreview'],
   },
   {
     id: 'thumb-image',
@@ -722,7 +815,13 @@ export const STEPS: Step[] = [
         warning: '채도가 낮으면 작은 화면에서 묻힌다.',
       },
       { id: 'jpg', label: 'JPG로 저장', warning: 'PNG가 아니라 JPG로 받는다.' },
+      {
+        id: 'shrink',
+        label: '휴대전화 엄지손톱 크기로 축소해 읽히는지 확인',
+        warning: '읽히지 않으면 글자를 키우거나 카피를 줄인다.',
+      },
     ],
+    widgets: ['thumbnailPreview'],
   },
 
   // ─────────────────────────── Phase 5: Vrew ───────────────────────────

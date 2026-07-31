@@ -55,7 +55,12 @@ export type StepWidget =
   | 'realityCheck'
   | 'scriptChecker'
   | 'episodeHistory'
-  | 'dataBackup';
+  | 'dataBackup'
+  | 'revenueSimulator'
+  | 'runtimeCalculator'
+  | 'introScorer'
+  | 'nicheAdvisor'
+  | 'thumbnailPreview';
 
 /** 워크플로우 한 단계 */
 export interface Step {

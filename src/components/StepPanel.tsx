@@ -10,6 +10,9 @@ import { LectureDiscrepancies, PolicyRisk, RealityCheck } from './PolicyRisk';
 import { ScriptChecker } from './ScriptChecker';
 import { EpisodeHistory } from './EpisodeHistory';
 import { DataBackup } from './DataBackup';
+import { RevenueSimulator, RuntimeCalculator } from './RevenueSimulator';
+import { IntroScorer, NicheAdvisor } from './IntroScorer';
+import { ThumbnailPreview } from './ThumbnailPreview';
 import {
   ChannelTracker,
   CostCalculator,
@@ -63,6 +66,16 @@ function renderWidget(widget: StepWidget) {
       return <EpisodeHistory key={widget} />;
     case 'dataBackup':
       return <DataBackup key={widget} />;
+    case 'revenueSimulator':
+      return <RevenueSimulator key={widget} />;
+    case 'runtimeCalculator':
+      return <RuntimeCalculator key={widget} />;
+    case 'introScorer':
+      return <IntroScorer key={widget} />;
+    case 'nicheAdvisor':
+      return <NicheAdvisor key={widget} />;
+    case 'thumbnailPreview':
+      return <ThumbnailPreview key={widget} />;
     default:
       return null;
   }
