@@ -31,8 +31,15 @@ const HAS_ARTIFACTS = ['01-script.md', '02-image.md', '03-thumbnail.md', '04-int
 
 const describeIfArtifacts = HAS_ARTIFACTS ? describe : describe.skip;
 
+/**
+ * describe.skip 이라도 콜백 본문은 수집 단계에서 실행된다.
+ * 따라서 파일이 없을 때 예외를 던지면 안 되고, 빈 문자열을 반환해야 한다.
+ * 실제 단언은 describeIfArtifacts 가 막아준다.
+ */
 function load(name: string): string {
-  return readFileSync(join(DIR, name), 'utf8');
+  const path = join(DIR, name);
+  if (!existsSync(path)) return '';
+  return readFileSync(path, 'utf8');
 }
 
 /** === MARKER === 구간을 잘라낸다 */
