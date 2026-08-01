@@ -24,10 +24,12 @@ export const TOOLS: Record<ToolId, Tool> = {
     id: 'claude',
     name: 'Claude',
     url: 'https://claude.ai',
-    monthlyCostKrw: 30000,
+    monthlyCostKrw: 28000,
     plan: 'Pro $20/월',
     role: '기준 AI — 대본·이미지 프롬프트·인트로·썸네일 카피를 모두 여기서 생성',
-    note: '모델은 Sonnet 사용. Opus는 더 똑똑하지만 비싸서 긴 대본을 끝까지 못 만든다.',
+    note:
+      '모델은 Sonnet 사용. Opus는 더 똑똑하지만 비싸서 긴 대본을 끝까지 못 만든다. ' +
+      '원화 표기는 $20을 1,400원으로 환산한 값이며 환율과 카드 수수료에 따라 달라진다.',
   },
   flow: {
     id: 'flow',
@@ -42,10 +44,14 @@ export const TOOLS: Record<ToolId, Tool> = {
     id: 'grok',
     name: 'Grok',
     url: 'https://grok.com',
-    monthlyCostKrw: 30000,
-    plan: '약 3만원/월',
+    monthlyCostKrw: 42000,
+    plan: 'SuperGrok $30/월',
     role: '인트로 영상 4컷 생성 (이미지 → 6초 비디오)',
-    note: '한국어 대사와 립싱크 품질이 가장 좋고 저렴해서 선택. 예전엔 무료였다.',
+    note:
+      '한국어 대사와 립싱크 품질이 가장 좋고 저렴해서 선택. 예전엔 무료였다. ' +
+      '공식 요금표(x.ai/pricing)에 이미지·영상 생성이 SuperGrok에 포함돼 있다. ' +
+      'X Premium+($40)는 X 안의 Grok이라 영상 제작에는 필요하지 않다. ' +
+      '원화 표기는 $30을 1,400원으로 환산한 값이며 환율과 카드 수수료에 따라 달라진다.',
   },
   vrew: {
     id: 'vrew',

@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import {
   calcRunway,
+  DEFAULT_USD_KRW,
   fullMonthlyCost,
+  krwOf,
   minimumMonthlyCost,
   monthsToRecoup,
   SETUP_GATES,
   STARTUP_COSTS,
+  USD_KRW_NOTE,
   watchHoursPerView,
   YPP_REQUIREMENTS,
 } from '../lib/runway';
@@ -305,53 +308,81 @@ export function RunwayCalculator() {
 
 /** 비용 구성표 */
 export function StartupCosts() {
+  const [rate, setRate] = useState(String(DEFAULT_USD_KRW));
+  const [vat, setVat] = useState(false);
+  const usdKrw = Number.parseInt(rate, 10) || DEFAULT_USD_KRW;
+
   const monthly = STARTUP_COSTS.filter((c) => c.when === '월 반복');
   const oneTime = STARTUP_COSTS.filter((c) => c.when === '일회성');
+  const min = minimumMonthlyCost(usdKrw, vat);
+  const full = fullMonthlyCost(usdKrw, vat);
 
   return (
     <div className="widget">
       <p className="widget__desc">
         일회성 비용은 사실상 없습니다. 영상 편집이 아니라 조합이므로 고성능 컴퓨터가 필요하지
-        않습니다. 매월 나가는 구독료가 전부입니다.
+        않습니다. 매월 나가는 구독료가 전부입니다. 달러로 결제하는 도구는 환율에 따라 청구액이
+        달라지므로 아래에서 환율을 바꿔 보세요.
       </p>
+
+      <div className="widget__controls">
+        <Field label="환율 (원/$)" type="number" value={rate} onChange={setRate} />
+        <label className="check">
+          <input type="checkbox" checked={vat} onChange={(e) => setVat(e.target.checked)} />
+          부가세 10% 포함해서 보기
+        </label>
+      </div>
 
       <table className="cost-table">
         <thead>
           <tr>
             <th>항목</th>
-            <th>금액</th>
+            <th>정가</th>
+            <th>월 청구</th>
             <th>필수</th>
           </tr>
         </thead>
         <tbody>
-          {monthly.map((c) => (
-            <tr key={c.label} className={c.optional ? 'is-optional' : ''}>
-              <td>
-                <strong>{c.label}</strong>
-                <span className="cost-note">{c.note}</span>
-              </td>
-              <td className={c.amountKrw === 0 ? 'is-free' : ''}>
-                {c.amountKrw === 0 ? '무료' : formatKrw(c.amountKrw)}
-              </td>
-              <td>{c.optional ? '선택' : '필수'}</td>
-            </tr>
-          ))}
+          {monthly.map((c) => {
+            const krw = krwOf(c, usdKrw, vat);
+            return (
+              <tr key={c.label} className={c.optional ? 'is-optional' : ''}>
+                <td>
+                  <strong>{c.label}</strong>
+                  <span className="cost-note">{c.note}</span>
+                  {c.source && (
+                    <span className="cost-note">
+                      <a href={c.source} target="_blank" rel="noreferrer noopener">
+                        가격 출처 ↗
+                      </a>
+                      {c.lastVerified && ` · ${c.lastVerified} 확인`}
+                    </span>
+                  )}
+                </td>
+                <td>{c.usdAmount !== undefined ? `$${c.usdAmount}` : c.amountKrw === 0 ? '—' : '원화'}</td>
+                <td className={krw === 0 ? 'is-free' : ''}>{krw === 0 ? '무료' : formatKrw(krw)}</td>
+                <td>{c.optional ? '선택' : '필수'}</td>
+              </tr>
+            );
+          })}
         </tbody>
         <tfoot>
           <tr>
             <td>최소 구성 (선택 항목 제외)</td>
-            <td colSpan={2}>
-              <strong>{formatKrw(minimumMonthlyCost())}</strong> / 월
+            <td colSpan={3}>
+              <strong>{formatKrw(min)}</strong> / 월
             </td>
           </tr>
           <tr>
             <td>전체 구성</td>
-            <td colSpan={2}>
-              <strong>{formatKrw(fullMonthlyCost())}</strong> / 월
+            <td colSpan={3}>
+              <strong>{formatKrw(full)}</strong> / 월
             </td>
           </tr>
         </tfoot>
       </table>
+
+      <Note tone="warn">{USD_KRW_NOTE}</Note>
 
       {oneTime.length > 0 && (
         <>
@@ -359,7 +390,8 @@ export function StartupCosts() {
           <ul className="spec-list">
             {oneTime.map((c) => (
               <li key={c.label}>
-                <strong>{c.label}</strong> {c.amountKrw === 0 ? '추가 비용 없음' : formatKrw(c.amountKrw)}
+                <strong>{c.label}</strong>{' '}
+                {c.amountKrw === 0 ? '추가 비용 없음' : formatKrw(c.amountKrw)}
                 {c.note && ` — ${c.note}`}
               </li>
             ))}
@@ -368,9 +400,8 @@ export function StartupCosts() {
       )}
 
       <Note tone="info" strong>
-        첫 달은 <strong>최소 구성 {formatKrw(minimumMonthlyCost())}</strong>으로 시작하세요. 인트로
-        영상을 정지 이미지로 대체하면 Grok을 생략할 수 있습니다. 수익화가 승인된 뒤에 늘리는 편이
-        안전합니다.
+        첫 달은 <strong>최소 구성 {formatKrw(min)}</strong>으로 시작하세요. 인트로 영상을 정지
+        이미지로 대체하면 Grok을 생략할 수 있습니다. 수익화가 승인된 뒤에 늘리는 편이 안전합니다.
       </Note>
     </div>
   );

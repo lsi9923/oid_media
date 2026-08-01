@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { TOOLS, totalMonthlyCost } from '../data/tools';
 import {
   calcRunway,
+  DEFAULT_USD_KRW,
   fullMonthlyCost,
+  krwOf,
   minimumMonthlyCost,
   monthsToRecoup,
   POST_MONETIZATION_COSTS,
   SETUP_GATES,
   STARTUP_COSTS,
+  USD_KRW_NOTE,
   watchHoursPerView,
   YPP_REQUIREMENTS,
   type RunwayInput,
@@ -305,24 +309,75 @@ describe('STARTUP_COSTS — 비용 구성', () => {
     expect(minimumMonthlyCost()).toBeLessThan(fullMonthlyCost());
   });
 
-  it('★ 최소 구성은 59,000원이다', () => {
-    // Claude 30,000 + Vrew 29,000. Grok은 선택
-    expect(minimumMonthlyCost()).toBe(59000);
+  it('★ 최소 구성은 Claude + Vrew다', () => {
+    // $20 × 1,400 = 28,000 + Vrew 29,000. Grok은 선택
+    expect(minimumMonthlyCost()).toBe(28000 + 29000);
   });
 
-  it('전체 구성은 114,000원이다', () => {
-    // Claude 30,000 + Vrew 29,000 + Grok 55,000
-    expect(fullMonthlyCost()).toBe(114000);
+  it('★ 전체 구성에 Grok이 더해진다', () => {
+    // + $30 × 1,400 = 42,000
+    expect(fullMonthlyCost()).toBe(28000 + 29000 + 42000);
+  });
+
+  it('★ Grok은 SuperGrok $30이다 (X Premium+ $40 아님)', () => {
+    // 공식 요금표에 이미지·영상 생성이 SuperGrok에 포함돼 있다.
+    // X Premium+는 X 안의 Grok이라 영상 제작에 필요하지 않다.
+    const g = STARTUP_COSTS.find((c) => c.label.includes('Grok'));
+    expect(g?.usdAmount).toBe(30);
+    expect(g?.source).toBe('https://x.ai/pricing');
+    expect(g?.note).toMatch(/X Premium\+/);
+    expect(g?.note).toMatch(/필요하지 않/);
+  });
+
+  it('★ 달러 항목은 usdAmount가 원본이다', () => {
+    const usd = STARTUP_COSTS.filter((c) => c.usdAmount !== undefined);
+    expect(usd.length).toBeGreaterThanOrEqual(2);
+    for (const c of usd) {
+      // 환율을 바꾸면 원화도 따라 바뀌어야 한다
+      expect(krwOf(c, 1000)).toBe(c.usdAmount! * 1000);
+      expect(krwOf(c, 1500)).toBe(c.usdAmount! * 1500);
+    }
+  });
+
+  it('★ 환율이 오르면 총비용도 오른다', () => {
+    expect(fullMonthlyCost(1500)).toBeGreaterThan(fullMonthlyCost(1300));
+    // 원화 항목(Vrew)은 환율에 안 움직인다. 달러 항목 $50만 움직인다
+    expect(fullMonthlyCost(1500) - fullMonthlyCost(1400)).toBe((20 + 30) * 100);
+  });
+
+  it('★ 부가세를 더할 수 있다', () => {
+    const noVat = fullMonthlyCost(1400, false);
+    const withVat = fullMonthlyCost(1400, true);
+    expect(withVat).toBeGreaterThan(noVat);
+    // Vrew는 부가세 포함 표기이므로 더해지지 않는다
+    expect(withVat - noVat).toBe(Math.round((28000 + 42000) * 0.1));
+  });
+
+  it('환율이 0이나 음수면 기본값으로 대체한다', () => {
+    expect(fullMonthlyCost(0)).toBe(fullMonthlyCost(DEFAULT_USD_KRW));
+    expect(fullMonthlyCost(-100)).toBe(fullMonthlyCost(DEFAULT_USD_KRW));
+  });
+
+  it('★ 환율 기본값이 확인된 수치가 아니라고 밝힌다', () => {
+    expect(USD_KRW_NOTE).toMatch(/확인된 공식 수치가 아닙니다/);
+    expect(USD_KRW_NOTE).toMatch(/수수료/);
+  });
+
+  it('★ 달러 항목에 가격 출처와 확인일이 있다', () => {
+    for (const c of STARTUP_COSTS.filter((x) => x.usdAmount !== undefined)) {
+      expect(c.source, `${c.label} 출처 없음`).toMatch(/^https:\/\//);
+      expect(c.lastVerified, `${c.label} 확인일 없음`).toMatch(/^\d{4}-\d{2}$/);
+    }
   });
 
   it('선택 가능한 항목이 표시돼 있다', () => {
     const optional = STARTUP_COSTS.filter((c) => c.optional);
     expect(optional.length).toBeGreaterThanOrEqual(1);
-    expect(optional.map((c) => c.label)).toContain('Grok');
+    expect(optional.map((c) => c.label).join()).toMatch(/Grok/);
   });
 
   it('무료 항목이 0원으로 표시된다', () => {
-    const free = STARTUP_COSTS.filter((c) => c.amountKrw === 0);
+    const free = STARTUP_COSTS.filter((c) => c.amountKrw === 0 && c.usdAmount === undefined);
     expect(free.length).toBeGreaterThanOrEqual(2);
     expect(free.map((c) => c.label)).toContain('Google Flow');
   });
@@ -340,8 +395,42 @@ describe('STARTUP_COSTS — 비용 구성', () => {
   });
 });
 
-describe('POST_MONETIZATION_COSTS — 수익화 후 운영 비용', () => {
-  it('항목이 2개 이상이다', () => {
+describe('★ 도구 가격 단일 출처', () => {
+  // 두 곳에 가격을 따로 두면 어긋난다. 실제로 어긋났다 —
+  // tools.ts는 Grok 30,000원, runway.ts는 55,000원이라 같은 앱에서
+  // 총 고정비가 89,000원과 114,000원으로 갈렸다.
+  it('Claude 가격이 두 파일에서 같다', () => {
+    const b = STARTUP_COSTS.find((c) => c.label.includes('Claude'))!;
+    expect(TOOLS.claude.monthlyCostKrw).toBe(krwOf(b));
+  });
+
+  it('Grok 가격이 두 파일에서 같다', () => {
+    const b = STARTUP_COSTS.find((c) => c.label.includes('Grok'))!;
+    expect(TOOLS.grok.monthlyCostKrw).toBe(krwOf(b));
+  });
+
+  it('Vrew 가격이 두 파일에서 같다', () => {
+    const b = STARTUP_COSTS.find((c) => c.label.includes('Vrew'))!;
+    expect(TOOLS.vrew.monthlyCostKrw).toBe(krwOf(b));
+  });
+
+  it('★ 손익 시뮬레이터와 수익화 계산기의 총 고정비가 같다', () => {
+    // 사용자가 두 화면에서 다른 숫자를 보면 어느 쪽을 믿어야 할지 알 수 없다
+    expect(totalMonthlyCost()).toBe(fullMonthlyCost());
+  });
+
+  it('요금제 표기에 달러 금액이 들어 있다', () => {
+    expect(TOOLS.claude.plan).toMatch(/\$20/);
+    expect(TOOLS.grok.plan).toMatch(/\$30/);
+  });
+
+  it('★ Grok 설명이 잘못된 요금제를 고르지 않게 경고한다', () => {
+    expect(TOOLS.grok.note).toMatch(/X Premium\+/);
+    expect(TOOLS.grok.plan).toMatch(/SuperGrok/);
+  });
+});
+
+describe('POST_MONETIZATION_COSTS — 수익화 후 운영 비용', () => {  it('항목이 2개 이상이다', () => {
     expect(POST_MONETIZATION_COSTS.length).toBeGreaterThanOrEqual(2);
   });
 

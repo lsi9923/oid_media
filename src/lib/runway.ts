@@ -343,6 +343,11 @@ export const SETUP_GATES: Gate[] = [
 /** 수익화 전 단계의 총 비용 항목 */
 export interface CostItem {
   label: string;
+  /**
+   * 원화 금액.
+   * usdAmount가 있는 항목은 이 값이 참고용이다. 실제 청구액은
+   * krwOf()로 환율을 적용해 계산한다.
+   */
   amountKrw: number;
   when: '일회성' | '월 반복';
   note?: string;
@@ -350,38 +355,82 @@ export interface CostItem {
   optional: boolean;
   /** 표기 금액에 부가세 10%가 포함돼 있는가. 미표기면 불명확 */
   vatIncluded?: boolean;
-  /** 원화 환산 전 USD 정가 (환율 변동 대응) */
+  /** 달러로 청구되는 항목의 정가. 이쪽이 원본이다 */
   usdAmount?: number;
   /** 마지막 가격 확인일 */
   lastVerified?: string;
+  /** 가격 출처 */
+  source?: string;
+}
+
+/**
+ * 원화 환산에 쓰는 기본 환율.
+ *
+ * 달러 정가는 변하지 않아도 환율은 매일 변한다. 원화를 코드에 박으면
+ * 반드시 낡는다. 그래서 달러 금액을 원본으로 두고 환율을 곱한다.
+ *
+ * 이 기본값은 확인된 공식 수치가 아니다. 한국은행 ECOS에서 조회하려
+ * 했으나 API 호출 제한에 걸렸다. 사용자가 직접 고칠 수 있게 해두었으니
+ * 계산 전에 실제 환율로 바꾸는 것이 좋다.
+ */
+export const DEFAULT_USD_KRW = 1400;
+export const USD_KRW_NOTE =
+  '환율 기본값은 확인된 공식 수치가 아닙니다. 결제 시점의 실제 환율로 바꿔서 보세요. ' +
+  '카드사 해외결제 수수료(보통 1~2%)가 더 붙습니다.';
+
+/** 부가세율. 해외 디지털 서비스에 붙는다 */
+export const VAT_RATE = 0.1;
+
+/**
+ * 항목의 실제 청구 원화를 계산한다.
+ * 달러 항목은 환율을 곱하고, 원화 항목은 그대로 쓴다.
+ */
+export function krwOf(item: CostItem, usdKrw: number = DEFAULT_USD_KRW, withVat = false): number {
+  const rate = usdKrw > 0 ? usdKrw : DEFAULT_USD_KRW;
+  const base = item.usdAmount !== undefined ? item.usdAmount * rate : item.amountKrw;
+  if (!withVat) return Math.round(base);
+  // 이미 부가세가 포함된 표기면 더하지 않는다
+  return Math.round(item.vatIncluded ? base : base * (1 + VAT_RATE));
 }
 
 export const STARTUP_COSTS: CostItem[] = [
   {
     label: 'Claude Pro',
-    amountKrw: 30000,
+    amountKrw: 28000,
     when: '월 반복',
-    note: '대본·프롬프트 생성($20/월 + VAT). 이 방식의 핵심이므로 대체가 어렵습니다.',
+    note: '대본·프롬프트 생성. $20/월. 이 방식의 핵심이므로 대체가 어렵습니다.',
     optional: false,
     usdAmount: 20,
+    vatIncluded: false,
     lastVerified: '2026-08',
+    source: 'https://www.anthropic.com/pricing',
   },
   {
     label: 'Vrew Standard',
     amountKrw: 29000,
     when: '월 반복',
-    note: 'TTS와 조합. 무료 플랜은 월 10,000자로 장편 1편도 어렵습니다. Standard(500,000자/월)가 월 4편에 필요한 최소 플랜입니다.',
+    note:
+      'TTS와 조합. 국내 서비스라 원화로 청구됩니다. 무료 플랜은 분량 제한이 커서 ' +
+      '장편 1편도 어렵습니다. 실제 필요한 플랜은 만들 편수로 정해지므로 직접 확인하세요.',
     optional: false,
+    vatIncluded: true,
     lastVerified: '2026-08',
+    source: 'https://vrew.ai',
   },
   {
-    label: 'Grok',
-    amountKrw: 55000,
+    label: 'Grok (SuperGrok)',
+    amountKrw: 42000,
     when: '월 반복',
-    note: '인트로 영상용(X Premium+). 2025년 2월 $40/월로 인상됨. 인트로를 정지 이미지로 대체하면 생략 가능.',
+    note:
+      '인트로 영상용. $30/월. 공식 요금표에 이미지·영상 생성이 이 플랜에 포함돼 있습니다. ' +
+      'X Premium+($40)는 X 안에서 쓰는 Grok이라 영상 제작에는 필요하지 않습니다. ' +
+      '더 비싼 쪽이 Grok 용도로 더 나은 것이 아닙니다. ' +
+      '인트로를 정지 이미지로 대체하면 아예 생략할 수 있습니다.',
     optional: true,
-    usdAmount: 40,
+    usdAmount: 30,
+    vatIncluded: false,
     lastVerified: '2026-08',
+    source: 'https://x.ai/pricing',
   },
   {
     label: 'Google Flow',
@@ -389,6 +438,7 @@ export const STARTUP_COSTS: CostItem[] = [
     when: '월 반복',
     note: '이미지 생성. 무료지만 하루 생성 장수 제한이 있습니다.',
     optional: false,
+    vatIncluded: true,
   },
   {
     label: '미리캔버스',
@@ -396,6 +446,7 @@ export const STARTUP_COSTS: CostItem[] = [
     when: '월 반복',
     note: '썸네일 글자. 무료로 충분합니다.',
     optional: false,
+    vatIncluded: true,
   },
   {
     label: '컴퓨터·인터넷',
@@ -403,6 +454,7 @@ export const STARTUP_COSTS: CostItem[] = [
     when: '일회성',
     note: '이미 가진 것으로 충분합니다. 영상 편집이 아니라 조합이므로 고성능이 필요하지 않습니다.',
     optional: false,
+    vatIncluded: true,
   },
 ];
 
@@ -430,10 +482,13 @@ export const POST_MONETIZATION_COSTS: CostItem[] = [
   },
 ];
 
-/** 최소 구성 월 비용 (선택 항목 제외) */
-export function minimumMonthlyCost(): number {
+/**
+ * 최소 구성 월 비용 (선택 항목 제외).
+ * 달러 항목은 환율을 적용한다.
+ */
+export function minimumMonthlyCost(usdKrw: number = DEFAULT_USD_KRW, withVat = false): number {
   return STARTUP_COSTS.filter((c) => c.when === '월 반복' && !c.optional).reduce(
-    (s, c) => s + c.amountKrw,
+    (s, c) => s + krwOf(c, usdKrw, withVat),
     0,
   );
 }
@@ -448,6 +503,9 @@ export function minimumMonthlyCost(): number {
 export const SETUP_GATE_COUNT = SETUP_GATES.length;
 
 /** 전체 구성 월 비용 */
-export function fullMonthlyCost(): number {
-  return STARTUP_COSTS.filter((c) => c.when === '월 반복').reduce((s, c) => s + c.amountKrw, 0);
+export function fullMonthlyCost(usdKrw: number = DEFAULT_USD_KRW, withVat = false): number {
+  return STARTUP_COSTS.filter((c) => c.when === '월 반복').reduce(
+    (s, c) => s + krwOf(c, usdKrw, withVat),
+    0,
+  );
 }
