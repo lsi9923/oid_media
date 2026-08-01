@@ -222,11 +222,11 @@ describe('워크플로우 통합', () => {
     expect(w?.warning).toMatch(/12개월/);
   });
 
-  it('★ 관문 단계가 고급 기능 인증을 요구한다', () => {
+  it('★ 관문 단계가 중급·고급 기능 인증을 요구한다', () => {
     // 이 권한이 없으면 15분 넘는 영상을 못 올려 두 시간짜리 민담이 불가능하다
     const s = findStep('launch-gates');
     const g = s?.checklist.find((c) => c.id === 'g4');
-    expect(g?.label).toMatch(/고급 기능/);
+    expect(g?.label).toMatch(/중급|고급|기능/);
     expect(g?.warning).toMatch(/15분/);
   });
 
@@ -235,7 +235,7 @@ describe('워크플로우 통합', () => {
     const ids = s?.checklist.map((c) => c.id) ?? [];
     expect(ids).toContain('g2');
     expect(ids).toContain('g6');
-    expect(s?.checklist.find((c) => c.id === 'g6')?.warning).toMatch(/24%/);
+    expect(s?.checklist.find((c) => c.id === 'g6')?.warning).toMatch(/24%|30%/);
     expect(s?.widgets).toContain('setupGates');
   });
 

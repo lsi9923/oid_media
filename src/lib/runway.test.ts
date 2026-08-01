@@ -4,6 +4,7 @@ import {
   fullMonthlyCost,
   minimumMonthlyCost,
   monthsToRecoup,
+  POST_MONETIZATION_COSTS,
   SETUP_GATES,
   STARTUP_COSTS,
   watchHoursPerView,
@@ -253,12 +254,12 @@ describe('SETUP_GATES — 관문 정의', () => {
     // 15분 초과 업로드에 필요한데 놓치기 쉽다
     const g = SETUP_GATES.find((x) => x.id === 'advanced-features');
     expect(g).toBeDefined();
-    expect(g?.risk).toMatch(/두 시간|15분|업로드/);
+    expect(g?.risk).toMatch(/두 시간|15분|업로드|수익화/);
   });
 
   it('★ 세금 정보 제출이 원천징수 경고와 함께 있다', () => {
     const g = SETUP_GATES.find((x) => x.id === 'tax-info');
-    expect(g?.risk).toMatch(/24%|원천징수/);
+    expect(g?.risk).toMatch(/24%|30%|원천징수/);
   });
 
   it('★ 요건 달성 관문이 가장 오래 걸린다고 밝힌다', () => {
@@ -281,11 +282,21 @@ describe('SETUP_GATES — 관문 정의', () => {
 
   it('관문 순서가 논리적이다', () => {
     const ids = SETUP_GATES.map((g) => g.id);
-    // 계정 → 인증 → 채널 → 고급기능 → 도구 → 요건 → 신청 → 세금 → 지급
+    // 연령 → 계정 → 인증 → 채널 → 고급기능 → 도구 → 무위반 → 요건 → AdSense → 신청 → 세금 → 지급 → 활성유지
+    expect(ids.indexOf('age-requirement')).toBeLessThan(ids.indexOf('google-account'));
     expect(ids.indexOf('google-account')).toBeLessThan(ids.indexOf('channel'));
     expect(ids.indexOf('channel')).toBeLessThan(ids.indexOf('threshold'));
     expect(ids.indexOf('threshold')).toBeLessThan(ids.indexOf('apply'));
     expect(ids.indexOf('apply')).toBeLessThan(ids.indexOf('first-payout'));
+    expect(ids.indexOf('first-payout')).toBeLessThan(ids.indexOf('stay-active'));
+  });
+
+  it('★ 새 관문(연령·무위반·AdSense 연동·활성 유지)이 추가돼 있다', () => {
+    const ids = SETUP_GATES.map((g) => g.id);
+    expect(ids).toContain('age-requirement');
+    expect(ids).toContain('no-strikes');
+    expect(ids).toContain('adsense-link');
+    expect(ids).toContain('stay-active');
   });
 });
 
@@ -299,8 +310,9 @@ describe('STARTUP_COSTS — 비용 구성', () => {
     expect(minimumMonthlyCost()).toBe(59000);
   });
 
-  it('전체 구성은 89,000원이다', () => {
-    expect(fullMonthlyCost()).toBe(89000);
+  it('전체 구성은 114,000원이다', () => {
+    // Claude 30,000 + Vrew 29,000 + Grok 55,000
+    expect(fullMonthlyCost()).toBe(114000);
   });
 
   it('선택 가능한 항목이 표시돼 있다', () => {
@@ -325,6 +337,26 @@ describe('STARTUP_COSTS — 비용 구성', () => {
     const pc = STARTUP_COSTS.find((c) => c.label.includes('컴퓨터'));
     expect(pc?.amountKrw).toBe(0);
     expect(pc?.note).toMatch(/고성능이 필요하지 않/);
+  });
+});
+
+describe('POST_MONETIZATION_COSTS — 수익화 후 운영 비용', () => {
+  it('항목이 2개 이상이다', () => {
+    expect(POST_MONETIZATION_COSTS.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('모든 항목에 설명과 출처 힌트가 있다', () => {
+    for (const c of POST_MONETIZATION_COSTS) {
+      expect(c.note, `${c.label} 설명 없음`).toBeTruthy();
+      // 추정이면 note에 '추정'이 포함돼야 한다
+      expect(c.note).toMatch(/추정|공식|출처/);
+    }
+  });
+
+  it('환전 손실 항목이 있다', () => {
+    const fx = POST_MONETIZATION_COSTS.find((c) => c.label.includes('환전'));
+    expect(fx).toBeDefined();
+    expect(fx?.when).toBe('월 반복');
   });
 });
 

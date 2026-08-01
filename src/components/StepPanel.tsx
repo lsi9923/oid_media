@@ -57,7 +57,7 @@ const WIDGET_LABEL: Record<StepWidget, string> = {
   opsCopyright: '저작권',
   opsUpload: '업로드 운영',
   opsMidroll: '중간광고',
-  setupGates: '아홉 관문 체크리스트',
+  setupGates: '관문 체크리스트',
   runwayCalculator: '수익화 도달 계산',
   startupCosts: '비용 구성표',
 };

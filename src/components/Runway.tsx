@@ -33,7 +33,7 @@ export function SetupGates() {
   return (
     <div className="widget">
       <p className="widget__desc">
-        처음 시작하면 제작 전에 아홉 관문을 거칩니다. 대부분 무료지만{' '}
+        처음 시작하면 제작 전에 관문 {SETUP_GATES.length}개를 거칩니다. 대부분 무료지만{' '}
         <strong>수익화 요건 달성</strong> 하나가 수개월에서 1년 이상 걸립니다. 그 기간에는 수익이
         0원이고 도구 비용은 계속 나갑니다.
       </p>

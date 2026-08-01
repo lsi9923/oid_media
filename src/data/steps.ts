@@ -1,4 +1,5 @@
 import type { Phase, Step } from '../types';
+import { SETUP_GATE_COUNT } from '../lib/runway';
 
 /**
  * 강의(돈버니 채널 · 행크 출연)의 제작 순서를 그대로 옮긴 워크플로우 정의.
@@ -22,7 +23,7 @@ export const PHASES: Phase[] = [
     id: 'launch',
     badge: '▶',
     title: '채널 개설',
-    goal: '계정부터 수익화 승인까지 아홉 관문을 거친다. 여기가 가장 오래 걸린다.',
+    goal: `계정부터 수익화 승인까지 ${SETUP_GATE_COUNT}개 관문을 거친다. 여기가 가장 오래 걸린다.`,
   },
   {
     id: 'setup',
@@ -81,7 +82,7 @@ export const STEPS: Step[] = [
     duration: '15분',
     judgment: true,
     keyPoint:
-      '강의 사례(조회수 6만에 80만원)는 RPM 약 13,000원입니다. 한국 시청자 기반 엔터테인먼트에서 일반적인 수준이 아닙니다. 일반 RPM 2,200원으로 같은 조회수를 넣으면 약 13만원입니다. 여섯 배 차이입니다.',
+      '강의 사례(조회수 6만에 80만원)는 RPM(조회 1,000회당 수익) 약 13,000원입니다. 한국 시청자 기반 엔터테인먼트에서 일반적인 수준이 아닙니다. 일반 RPM 2,200원으로 같은 조회수를 넣으면 약 13만원입니다. 여섯 배 차이입니다.',
     actions: [
       '아래 시뮬레이터에서 RPM 시나리오를 "일반적"으로 두고 손익분기를 확인한다.',
       '목표 월수입을 넣어 필요한 조회수를 역산한다.',
@@ -106,7 +107,7 @@ export const STEPS: Step[] = [
         id: 'slot-caveat',
         label: '슬롯 개수가 수익을 보장하지 않는다는 점을 확인했다',
         warning:
-          'YouTube 공식 문구: Ad slots are not guaranteed to serve ads. 슬롯 수 × RPM으로 계산하면 크게 과대추정한다.',
+          'YouTube 공식: "Ad slots are not guaranteed to serve ads."(광고 슬롯이 있어도 실제 광고가 재생된다는 보장은 없다.) 슬롯 수 × RPM으로 계산하면 크게 과대추정한다.',
       },
       {
         id: 'cost',
@@ -240,23 +241,23 @@ export const STEPS: Step[] = [
   {
     id: 'launch-gates',
     phaseId: 'launch',
-    title: '아홉 관문 통과',
+    title: `관문 ${SETUP_GATE_COUNT}개 통과`,
     summary:
       '구글 계정부터 첫 입금까지 거쳐야 하는 것들입니다. 대부분 무료지만 순서와 누락 주의가 필요합니다.',
     timestamp: '13:20',
     tools: ['youtube'],
     duration: '1시간 + 대기',
     keyPoint:
-      '2단계 인증과 고급 기능 인증은 YPP 가입 요건에 명시돼 있는데 놓치기 쉽습니다. 특히 고급 기능이 없으면 15분 넘는 영상을 올릴 수 없어 두 시간짜리 민담을 업로드할 수 없습니다.',
+      '2단계 인증과 고급 기능 인증은 YPP 가입 요건에 명시돼 있는데 놓치기 쉽습니다. 특히 중급 기능이 없으면 15분 넘는 영상을 올릴 수 없어 두 시간짜리 민담을 업로드할 수 없습니다.',
     actions: [
       '구글 계정에 2단계 인증을 켠다.',
-      '채널을 만든다. 다채널 계획이 있으면 브랜드 채널로 만든다.',
-      '고급 기능 인증을 받는다. 전화번호 인증이나 신분증 확인이 필요하다.',
-      '15분 초과 영상을 올릴 수 있는지 확인한다.',
-      'AdSense 세금 정보를 미리 준비한다. 제출하지 않으면 수익의 최대 24%가 원천징수된다.',
+      '채널을 만든다. 다채널 계획이 있으면 브랜드 채널(하나의 구글 계정으로 여러 채널을 운영할 수 있는 형태)로 만든다.',
+      '전화번호 인증으로 중급(Intermediate) 기능을 받는다. 이것으로 15분 초과 업로드가 가능해진다.',
+      '채널 활동이 쌓이면 고급(Advanced) 기능이 자동 부여된다. 급하면 신분증·영상 인증으로 즉시 받을 수 있다.',
+      'AdSense(구글 광고 수익 지급 시스템) 세금 정보를 미리 준비한다.',
     ],
     checklist: [
-      { id: 'g1', label: '구글 계정 준비' },
+      { id: 'g1', label: '구글 계정 준비 (만 14세 이상, AdSense는 만 19세 이상)' },
       {
         id: 'g2',
         label: '2단계 인증 활성화',
@@ -265,8 +266,9 @@ export const STEPS: Step[] = [
       { id: 'g3', label: '채널 개설 (다채널 계획이면 브랜드 채널)' },
       {
         id: 'g4',
-        label: '고급 기능 인증 완료',
-        warning: '이 권한이 없으면 15분 넘는 영상을 올릴 수 없다. 두 시간짜리 민담이 불가능하다.',
+        label: '중급·고급 기능 인증 완료',
+        warning:
+          '15분 초과 업로드는 중급(전화번호), 수익화 신청은 고급(채널 기록 또는 신분증). 두 시간짜리 민담이 불가능하다.',
       },
       {
         id: 'g5',
@@ -275,7 +277,13 @@ export const STEPS: Step[] = [
       {
         id: 'g6',
         label: '세금 정보 제출 절차를 확인했다',
-        warning: '미제출 시 전 세계 수익의 최대 24% 원천징수. 수익 발생 전에 준비한다.',
+        warning:
+          '미제출 시 개인 계정은 전 세계 수익의 최대 24%, 사업자 계정은 미국 수익의 30% 원천징수. 한미 조세조약 적용 시 10%로 낮출 수 있다.',
+      },
+      {
+        id: 'g7',
+        label: '커뮤니티 가이드라인 경고가 없는지 확인',
+        warning: '활성 경고가 있으면 YPP 신청이 차단된다.',
       },
     ],
     widgets: ['setupGates'],
@@ -291,11 +299,11 @@ export const STEPS: Step[] = [
     tools: ['claude', 'grok', 'vrew', 'flow', 'miricanvas'],
     duration: '20분',
     keyPoint:
-      '월 약 8만원. 영상 1개 제작 원가는 1,000~2,000원. 무료 도구는 언제 유료로 바뀔지 모르니 시작을 미루지 말 것.',
+      '최소 구성은 월 약 6만원(Claude + Vrew). Grok을 추가하면 약 11만원. 영상 1개 제작 원가는 1,000~2,000원. 무료 도구는 언제 유료로 바뀔지 모르니 시작을 미루지 말 것.',
     actions: [
       'Claude(claude.ai) 가입 후 Pro($20/월) 결제. 모델은 Sonnet을 쓴다.',
-      'Grok(grok.com) 결제(약 3만원/월) — 인트로 영상용.',
-      'Vrew(vrew.ai) Standard(29,000원/월) 결제 — TTS와 편집용.',
+      'Grok(grok.com) 결제(X Premium+ $40/월, 약 55,000원) — 인트로 영상용. 정지 이미지로 대체하면 생략 가능.',
+      'Vrew(vrew.ai) Standard(29,000원/월) 결제 — TTS와 편집용. 월 4편 기준 Standard 이상 필요(Light는 글자 수 부족).',
       'Google Flow(labs.google/flow)는 구글 계정으로 로그인만 하면 무료.',
       '미리캔버스도 무료 가입.',
     ],
@@ -303,12 +311,24 @@ export const STEPS: Step[] = [
       { id: 'claude', label: 'Claude Pro 결제 완료 (모델: Sonnet)' },
       {
         id: 'grok',
-        label: 'Grok 결제 완료',
-        warning: '예전엔 무료였다. 무료 정책은 계속 축소되는 중.',
+        label: 'Grok 결제 완료 (X Premium+ $40/월)',
+        warning: '2025년 2월부터 $40/월(약 55,000원)로 인상됐다. 인트로를 정지 이미지로 대체하면 생략 가능.',
       },
       { id: 'vrew', label: 'Vrew Standard 결제 완료' },
       { id: 'flow', label: 'Google Flow 로그인 확인 (무료)' },
       { id: 'canvas', label: '미리캔버스 가입 (무료)' },
+      {
+        id: 'license-check',
+        label: '각 도구의 상업적 이용 약관을 확인했다',
+        warning:
+          'Vrew Standard가 수익화 영상에 사용 가능한지, Google Flow 생성물의 상업적 이용이 허용되는지 각각 약관 페이지에서 확인한다. 약관은 변경될 수 있으므로 결제 시점에 확인.',
+      },
+      {
+        id: 'bgm-rights',
+        label: '배경음악 저작권을 확인할 계획을 세웠다',
+        warning:
+          'Vrew 내장 음원이나 외부 BGM은 Content ID에 등록돼 있을 수 있다. 매칭되면 해당 영상 수익이 음원 권리자에게 간다.',
+      },
     ],
     widgets: ['costCalculator'],
   },
@@ -1081,9 +1101,36 @@ export const STEPS: Step[] = [
       { id: 'thumb', label: '썸네일 JPG 지정' },
       { id: 'ads', label: '중간광고 활성화' },
       {
+        id: 'not-for-kids',
+        label: '아동용 콘텐츠 여부를 "아동용이 아님"으로 설정했다',
+        warning:
+          '아동용으로 설정되면 개인 맞춤 광고가 꺼져 RPM(조회 1,000회당 수익)이 50~80% 감소한다. ' +
+          '민담은 옛이야기지만 시청 대상이 성인이면 "아동용이 아님"이 맞다. ' +
+          '잘못 설정하면 댓글·엔드스크린·알림도 전부 꺼진다. (근거: TechTimes 2026-07-13, Gyre.pro 2026-06-02)',
+      },
+      {
+        id: 'channel-level-kids',
+        label: '채널 수준 아동용 설정이 "아동용이 아님"인지 확인했다',
+        warning:
+          '채널 설정(Studio → 설정 → 채널 → 고급 설정)에서 전체 채널을 아동용으로 설정하면 모든 영상이 영향받는다.',
+      },
+      {
+        id: 'schedule',
+        label: '공개 예약 시각을 정했다',
+        warning:
+          '타겟 시청자(한국 성인)가 활동하는 시간대에 공개한다. ' +
+          '비공개로 올려두고 나중에 공개 전환하면 첫 24시간 부스트를 놓친다. (추정)',
+      },
+      {
+        id: 'playlist',
+        label: '영상을 재생목록에 추가했다',
+        warning:
+          '재생목록은 다음 영상 자동재생을 유도해 시청시간을 늘린다. 수익화 요건(4,000시간) 달성의 핵심 레버.',
+      },
+      {
         id: 'slots',
         label: '업로드 한 시간 뒤 빨간 슬롯을 확인해 옮겼다',
-        warning: 'Studio가 게재 가능성 낮은 슬롯을 빨간색으로 표시한다. TTS 낭독은 자연 중단점이 적어 잘 걸린다.',
+        warning: 'Studio가 게재 가능성 낮은 슬롯을 빨간색으로 표시한다. TTS 낭독은 자연 중단점(시청자가 멈춰도 어색하지 않은 장면 전환 지점)이 적어 잘 걸린다.',
       },
       {
         id: 'meta',

@@ -201,6 +201,18 @@ export interface Gate {
  */
 export const SETUP_GATES: Gate[] = [
   {
+    id: 'age-requirement',
+    name: '연령 요건',
+    what:
+      '한국에서 구글 계정을 직접 관리하려면 만 14세 이상이어야 합니다. ' +
+      'AdSense는 만 18세(한국은 만 19세) 이상만 가입 가능합니다. 미성년자가 직접 수익화를 설정할 수 없습니다.',
+    cost: '무료',
+    duration: '해당 없음',
+    source: 'https://support.google.com/accounts/answer/1350409',
+    risk:
+      '만 19세 미만은 보호자 계정이 필요하며, AdSense 계정 소유자는 반드시 성인이어야 합니다.',
+  },
+  {
     id: 'google-account',
     name: '구글 계정',
     what: '구글 계정을 만듭니다. 이미 있으면 그것을 씁니다.',
@@ -227,21 +239,33 @@ export const SETUP_GATES: Gate[] = [
   },
   {
     id: 'advanced-features',
-    name: '고급 기능 인증',
+    name: '중급·고급 기능 인증',
     what:
-      '전화번호 인증 또는 신분증 확인으로 고급 기능 접근 권한을 받습니다. YPP 가입 요건입니다. 15분 초과 영상 업로드도 이 권한이 있어야 합니다.',
+      'YouTube는 기능 접근을 Standard → Intermediate → Advanced 3단계로 구분합니다. ' +
+      '15분 초과 영상을 올리려면 전화번호 인증(중급, Intermediate)이 필요합니다. ' +
+      '수익화 신청은 고급(Advanced) 기능이며, 충분한 채널 활동 기록으로 자동 부여되거나 신분증·영상 인증으로 즉시 잠금해제됩니다.',
     cost: '무료',
     duration: '즉시 ~ 며칠',
     source: 'https://support.google.com/youtube/answer/9890437',
-    risk: '이 권한이 없으면 두 시간짜리 영상을 올릴 수 없고 수익화 신청도 불가합니다.',
+    risk: '중급 권한이 없으면 두 시간짜리 영상을 올릴 수 없고, 고급 권한이 없으면 수익화 신청이 불가합니다.',
   },
   {
     id: 'tools',
     name: '제작 도구 결제',
     what: 'Claude, Grok, Vrew를 결제합니다. Flow와 미리캔버스는 무료입니다.',
-    cost: '월 89,000원',
+    cost: '월 59,000~114,000원 (VAT 별도, Grok 선택 시 상한)',
     duration: '20분',
-    risk: '이 시점부터 비용이 나가지만 수익은 아직 0원입니다.',
+    risk: '이 시점부터 비용이 나가지만 수익은 아직 0원입니다. 해외 SaaS 결제에는 부가세 10%가 추가됩니다.',
+  },
+  {
+    id: 'no-strikes',
+    name: '커뮤니티 가이드라인 무위반',
+    what:
+      '활성 상태의 커뮤니티 가이드라인 경고가 없어야 YPP 신청이 가능합니다.',
+    cost: '무료',
+    duration: '위반 시 경고 1건당 90일 대기',
+    source: 'https://support.google.com/youtube/answer/72851',
+    risk: '경고가 있으면 수익화 신청 자체가 차단됩니다. 만료될 때까지 대기해야 합니다.',
   },
   {
     id: 'threshold',
@@ -253,6 +277,18 @@ export const SETUP_GATES: Gate[] = [
     source: 'https://support.google.com/youtube/answer/72851',
     risk:
       '가장 긴 관문입니다. 이 기간 수익은 0원입니다. 시청시간은 최근 12개월만 집계되므로 속도가 너무 느리면 앞서 쌓은 것이 만료됩니다.',
+  },
+  {
+    id: 'adsense-link',
+    name: 'AdSense 계정 연동',
+    what:
+      '수익화 신청 시 AdSense for YouTube 계정을 연결하거나 새로 생성해야 합니다. ' +
+      '반드시 YouTube Studio 내에서 생성해야 합니다.',
+    cost: '무료',
+    duration: '10분',
+    source: 'https://support.google.com/youtube/answer/72851',
+    risk:
+      '기존 AdSense 계정이 정지 상태이거나, YouTube Studio 외부에서 잘못 생성한 경우 연동이 거부될 수 있습니다.',
   },
   {
     id: 'apply',
@@ -269,23 +305,38 @@ export const SETUP_GATES: Gate[] = [
     id: 'tax-info',
     name: 'AdSense 세금 정보 제출',
     what:
-      '모든 크리에이터가 세금 정보를 제출해야 합니다. 한국 거주자는 조세조약에 따라 미국 시청자 수익의 원천징수율을 낮출 수 있습니다.',
+      '모든 크리에이터가 세금 정보를 제출해야 합니다. 한국 거주자는 한미 조세조약(제14조, 저작권 로열티)에 따라 미국 시청자 수익의 원천징수율을 10%로 낮출 수 있습니다.',
     cost: '무료',
     duration: '30분',
-    source: 'https://support.google.com/youtube/answer/14732067',
+    source: 'https://support.google.com/youtube/answer/10391362',
     risk:
-      '제출하지 않으면 구글이 전 세계 수익의 최대 24%를 원천징수할 수 있습니다. 반드시 먼저 제출하세요.',
+      '제출하지 않으면 개인 계정은 전 세계 수익의 최대 24%를, 사업자 계정은 미국 시청자 수익의 30%를 원천징수당할 수 있습니다. ' +
+      '한미 조세조약을 적용하면 미국 시청자 수익의 10%(저작권 로열티)로 낮출 수 있습니다.',
   },
   {
     id: 'first-payout',
     name: '첫 지급',
     what:
-      '잔액이 지급 임계값을 넘고 지급 보류가 없으면 매월 21일에서 26일 사이에 지급됩니다. 주소 확인(PIN 우편) 절차가 있을 수 있습니다.',
+      '잔액이 지급 임계값(USD $100 — 한국 계정은 USD 기준, 공식 threshold 표에 KRW 없음)을 넘고 ' +
+      '지급 보류가 없으면 매월 21일에서 26일 사이에 지급됩니다. ' +
+      '수익이 인증 임계값($10 상당)에 도달하면 구글이 우편으로 6자리 PIN을 보내며, 3주 소요, 4개월 내 입력해야 합니다.',
     cost: '무료',
     duration: '임계값 도달 후 다음 지급 주기',
     source: 'https://support.google.com/adsense/answer/7164703',
     risk:
-      '임계값을 못 넘으면 다음 달로 넘어갑니다. 수익이 적으면 첫 입금까지 여러 달이 걸릴 수 있습니다.',
+      '임계값($100)을 못 넘으면 다음 달로 넘어갑니다. 수익이 적으면 첫 입금까지 여러 달이 걸릴 수 있습니다. ' +
+      'PIN 우편을 4개월 내 입력하지 않으면 광고 게재가 중지됩니다.',
+  },
+  {
+    id: 'stay-active',
+    name: '채널 활성 유지',
+    what:
+      '6개월 이상 영상 업로드나 커뮤니티 게시물이 없으면 수익화가 해제될 수 있습니다.',
+    cost: '무료',
+    duration: '지속적',
+    source: 'https://support.google.com/youtube/answer/72851',
+    risk:
+      '수익화 승인 후에도 6개월 방치하면 수익화가 꺼질 수 있습니다. 재승인에 시간이 걸립니다.',
   },
 ];
 
@@ -297,6 +348,12 @@ export interface CostItem {
   note?: string;
   /** 없어도 되는가 */
   optional: boolean;
+  /** 표기 금액에 부가세 10%가 포함돼 있는가. 미표기면 불명확 */
+  vatIncluded?: boolean;
+  /** 원화 환산 전 USD 정가 (환율 변동 대응) */
+  usdAmount?: number;
+  /** 마지막 가격 확인일 */
+  lastVerified?: string;
 }
 
 export const STARTUP_COSTS: CostItem[] = [
@@ -304,22 +361,27 @@ export const STARTUP_COSTS: CostItem[] = [
     label: 'Claude Pro',
     amountKrw: 30000,
     when: '월 반복',
-    note: '대본·프롬프트 생성. 이 방식의 핵심이므로 대체가 어렵습니다.',
+    note: '대본·프롬프트 생성($20/월 + VAT). 이 방식의 핵심이므로 대체가 어렵습니다.',
     optional: false,
+    usdAmount: 20,
+    lastVerified: '2026-08',
   },
   {
     label: 'Vrew Standard',
     amountKrw: 29000,
     when: '월 반복',
-    note: 'TTS와 조합. 무료 플랜은 분량 제한이 커서 장편에 쓰기 어렵습니다.',
+    note: 'TTS와 조합. 무료 플랜은 월 10,000자로 장편 1편도 어렵습니다. Standard(500,000자/월)가 월 4편에 필요한 최소 플랜입니다.',
     optional: false,
+    lastVerified: '2026-08',
   },
   {
     label: 'Grok',
-    amountKrw: 30000,
+    amountKrw: 55000,
     when: '월 반복',
-    note: '인트로 영상용. 인트로를 정지 이미지로 대체하면 생략할 수 있습니다.',
+    note: '인트로 영상용(X Premium+). 2025년 2월 $40/월로 인상됨. 인트로를 정지 이미지로 대체하면 생략 가능.',
     optional: true,
+    usdAmount: 40,
+    lastVerified: '2026-08',
   },
   {
     label: 'Google Flow',
@@ -344,6 +406,30 @@ export const STARTUP_COSTS: CostItem[] = [
   },
 ];
 
+/**
+ * 수익화 후 발생하는 운영 비용.
+ * STARTUP_COSTS와 별도이며, 수익이 발생한 뒤에야 의미가 생긴다.
+ * 출처: 03-koreatax.md 분석 (2026-08-01)
+ */
+export const POST_MONETIZATION_COSTS: CostItem[] = [
+  {
+    label: '세무사 종합소득세 신고 대행',
+    amountKrw: 165000,
+    when: '일회성',
+    note: '간편장부 기준 연 11~22만원 (추정). 복식부기 시 상승. 연 1회 발생.',
+    optional: true,
+    lastVerified: '2026-08',
+  },
+  {
+    label: '환전 손실 + 외화 수취 수수료',
+    amountKrw: 10000,
+    when: '월 반복',
+    note: '수령액의 약 1.5% + 건당 5,000~10,000원 (추정). 은행·수익 규모에 따라 변동.',
+    optional: false,
+    lastVerified: '2026-08',
+  },
+];
+
 /** 최소 구성 월 비용 (선택 항목 제외) */
 export function minimumMonthlyCost(): number {
   return STARTUP_COSTS.filter((c) => c.when === '월 반복' && !c.optional).reduce(
@@ -351,6 +437,15 @@ export function minimumMonthlyCost(): number {
     0,
   );
 }
+
+/**
+ * 관문 개수.
+ *
+ * 문구에 숫자를 직접 쓰면 관문을 추가·삭제할 때 어긋난다.
+ * 실제로 한 번 어긋났다 — 배열은 13개인데 UI는 "열네 관문"이라고 표시했다.
+ * 그래서 배열 길이에서 유도한다.
+ */
+export const SETUP_GATE_COUNT = SETUP_GATES.length;
 
 /** 전체 구성 월 비용 */
 export function fullMonthlyCost(): number {
