@@ -64,6 +64,13 @@ export interface RunwayResult {
   monthlyWatchHours: number;
   /** 월 누적 구독자 증가분 */
   monthlySubscribers: number;
+  /**
+   * 이 속도로 도달 가능한 시청시간 상한.
+   * 12개월이 지나면 오래된 달이 떨어져 나가 이 값에서 멈춘다.
+   */
+  watchHourCeiling: number;
+  /** 상한이 요건에 못 미쳐 아무리 기다려도 못 채우는 상태인가 */
+  watchHoursUnreachable: boolean;
   /** 시청시간 요건 충족까지 남은 개월 */
   monthsToWatchHours: number | null;
   /** 구독자 요건 충족까지 남은 개월 */
@@ -89,6 +96,35 @@ export function watchHoursPerView(runtimeMinutes: number, retentionPercent: numb
 }
 
 /**
+ * 시청시간 요건을 채우기 위해 필요한 월 최소 시청시간.
+ *
+ * 시청시간은 최근 12개월만 집계된다. 매월 r시간씩 쌓으면
+ * 12개월째에 r×12가 되고, 그 뒤로는 가장 오래된 달이 떨어져 나가면서
+ * r×12에서 더 늘지 않는다. 즉 도달 가능한 최대치가 r×12다.
+ *
+ * 따라서 r × 12 < 4,000이면 아무리 오래 해도 요건을 채울 수 없다.
+ * 앱이 처음에 이것을 "만료될 수 있습니다"라고만 경고했는데,
+ * 실은 경고가 아니라 수학적 상한이다.
+ *
+ * 4,000 / 12 = 333.33시간/월
+ */
+export const MIN_MONTHLY_WATCH_HOURS =
+  YPP_REQUIREMENTS.watchHours / YPP_REQUIREMENTS.watchHourWindowMonths;
+
+/**
+ * 이 속도로 도달 가능한 시청시간 상한.
+ * 12개월 이후에는 이 값에서 멈춘다.
+ */
+export function watchHourCeiling(monthlyWatchHours: number): number {
+  return Math.max(0, monthlyWatchHours) * YPP_REQUIREMENTS.watchHourWindowMonths;
+}
+
+/** 이 속도로 시청시간 요건에 도달할 수 있는가 */
+export function canReachWatchHours(monthlyWatchHours: number): boolean {
+  return watchHourCeiling(monthlyWatchHours) >= YPP_REQUIREMENTS.watchHours;
+}
+
+/**
  * 수익화 도달까지의 기간과 누적 비용을 계산한다.
  *
  * 단순 선형 모델이다. 실제로는 조회수가 시간에 따라 비선형으로 쌓이고
@@ -110,19 +146,50 @@ export function calcRunway(input: RunwayInput): RunwayResult {
     YPP_REQUIREMENTS.subscribers - Math.max(0, input.currentSubscribers),
   );
 
+  /**
+   * 이 속도로 도달 가능한 시청시간 상한과, 그것으로 요건을 채울 수 있는지.
+   * 12개월이 지나면 가장 오래된 달이 떨어져 나가므로 총량이 여기서 멈춘다.
+   */
+  const ceiling = watchHourCeiling(monthlyWatchHours);
+  const watchHoursUnreachable = needHours > 0 && !canReachWatchHours(monthlyWatchHours);
+
   const monthsToWatchHours =
-    needHours === 0 ? 0 : monthlyWatchHours > 0 ? Math.ceil(needHours / monthlyWatchHours) : null;
+    needHours === 0
+      ? 0
+      : watchHoursUnreachable
+        ? null
+        : monthlyWatchHours > 0
+          ? Math.ceil(needHours / monthlyWatchHours)
+          : null;
   const monthsToSubscribers =
     needSubs === 0 ? 0 : monthlySubscribers > 0 ? Math.ceil(needSubs / monthlySubscribers) : null;
 
   // 둘 중 하나라도 도달 불가면 전체 불가
   if (monthsToWatchHours === null || monthsToSubscribers === null) {
-    const reasons: string[] = [];
-    if (monthsToWatchHours === null) reasons.push('시청시간이 쌓이지 않습니다');
-    if (monthsToSubscribers === null) reasons.push('구독자가 늘지 않습니다');
+    let blocker: string;
+    if (watchHoursUnreachable) {
+      // 경고가 아니라 수학적 상한이다. 기다려도 해결되지 않는다
+      blocker =
+        `이 속도로는 시청시간 요건을 채울 수 없습니다. ` +
+        `시청시간은 최근 ${YPP_REQUIREMENTS.watchHourWindowMonths}개월만 집계되므로 ` +
+        `월 ${Math.round(monthlyWatchHours).toLocaleString('ko-KR')}시간으로는 ` +
+        `${YPP_REQUIREMENTS.watchHourWindowMonths}개월째에 ` +
+        `${Math.round(ceiling).toLocaleString('ko-KR')}시간에서 멈추고 더 늘지 않습니다. ` +
+        `${YPP_REQUIREMENTS.watchHours.toLocaleString('ko-KR')}시간에 못 미치므로 ` +
+        `기다려도 요건을 채우지 못합니다. ` +
+        `월 ${Math.ceil(MIN_MONTHLY_WATCH_HOURS).toLocaleString('ko-KR')}시간 이상을 ` +
+        `꾸준히 쌓아야 합니다. 편수·조회수·지속률 중 하나를 올려야 합니다.`;
+    } else {
+      const reasons: string[] = [];
+      if (monthsToWatchHours === null) reasons.push('시청시간이 쌓이지 않습니다');
+      if (monthsToSubscribers === null) reasons.push('구독자가 늘지 않습니다');
+      blocker = `${reasons.join(', ')}. 편수·조회수·지속률·구독 전환율을 확인하세요.`;
+    }
     return {
       monthlyWatchHours,
       monthlySubscribers,
+      watchHourCeiling: ceiling,
+      watchHoursUnreachable,
       monthsToWatchHours,
       monthsToSubscribers,
       monthsToEligible: null,
@@ -130,7 +197,7 @@ export function calcRunway(input: RunwayInput): RunwayResult {
       bottleneck: null,
       sunkCostKrw: null,
       videosUntilMonetized: null,
-      blocker: `${reasons.join(', ')}. 편수·조회수·지속률·구독 전환율을 확인하세요.`,
+      blocker,
     };
   }
 
@@ -147,13 +214,15 @@ export function calcRunway(input: RunwayInput): RunwayResult {
     monthsToMonetized * Math.max(0, input.monthlyCostKrw) +
     videosUntilMonetized * Math.max(0, input.costPerVideoKrw);
 
-  // 시청시간은 최근 12개월 기준이다. 그보다 오래 걸리면 앞부분이 만료된다
+  // 시청시간 도달은 가능하지만 12개월에 가깝다면 여유가 없다고 알린다
   let blocker: string | null = null;
-  if (monthsToWatchHours > YPP_REQUIREMENTS.watchHourWindowMonths) {
+  if (monthsToWatchHours > YPP_REQUIREMENTS.watchHourWindowMonths * 0.75) {
     blocker =
       `시청시간 요건까지 ${monthsToWatchHours}개월이 걸립니다. ` +
-      `시청시간은 최근 ${YPP_REQUIREMENTS.watchHourWindowMonths}개월만 집계되므로, ` +
-      `이 속도로는 앞서 쌓은 시간이 만료돼 요건을 채우지 못할 수 있습니다.`;
+      `시청시간은 최근 ${YPP_REQUIREMENTS.watchHourWindowMonths}개월만 집계되고 ` +
+      `이 속도의 상한은 ${Math.round(ceiling).toLocaleString('ko-KR')}시간이라 여유가 없습니다. ` +
+      `조회수가 예상보다 낮으면 상한이 ${YPP_REQUIREMENTS.watchHours.toLocaleString('ko-KR')}시간 ` +
+      `아래로 내려가 아예 도달하지 못합니다.`;
   }
 
   // 구독자 요건이 36개월(3년) 이상이면 사실상 도달 불가 수준
@@ -168,6 +237,8 @@ export function calcRunway(input: RunwayInput): RunwayResult {
   return {
     monthlyWatchHours,
     monthlySubscribers,
+    watchHourCeiling: ceiling,
+    watchHoursUnreachable,
     monthsToWatchHours,
     monthsToSubscribers,
     monthsToEligible,

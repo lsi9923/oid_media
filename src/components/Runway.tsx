@@ -4,6 +4,7 @@ import {
   DEFAULT_USD_KRW,
   fullMonthlyCost,
   krwOf,
+  MIN_MONTHLY_WATCH_HOURS,
   minimumMonthlyCost,
   monthsToRecoup,
   SETUP_GATES,
@@ -202,7 +203,26 @@ export function RunwayCalculator() {
           </span>
           <span className="stat__label">월 구독자</span>
         </div>
+        <div className="stat">
+          <span className={`stat__value${r.watchHoursUnreachable ? ' is-off' : ''}`}>
+            {Math.round(r.watchHourCeiling).toLocaleString('ko-KR')}
+          </span>
+          <span className="stat__label">시청시간 상한 (12개월)</span>
+        </div>
       </div>
+
+      {r.watchHoursUnreachable && (
+        <Note tone="warn" strong>
+          <strong>이 속도로는 시청시간 요건을 채울 수 없습니다.</strong> 시청시간은 최근 12개월만
+          집계되므로, 매월 {Math.round(r.monthlyWatchHours).toLocaleString('ko-KR')}시간씩 쌓아도
+          12개월째에 {Math.round(r.watchHourCeiling).toLocaleString('ko-KR')}시간에서 멈추고 더 늘지
+          않습니다. 오래된 달이 떨어져 나가기 때문입니다. 기다리는 것으로는 해결되지 않고,{' '}
+          <strong>
+            월 {Math.ceil(MIN_MONTHLY_WATCH_HOURS).toLocaleString('ko-KR')}시간 이상
+          </strong>
+          을 꾸준히 쌓아야 합니다. 편수·조회수·지속률 중 하나를 올리세요.
+        </Note>
+      )}
 
       {r.monthsToEligible === null ? (
         <Note tone="warn" strong>

@@ -2,15 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { TOOLS, totalMonthlyCost } from '../data/tools';
 import {
   calcRunway,
+  canReachWatchHours,
   DEFAULT_USD_KRW,
   fullMonthlyCost,
   krwOf,
+  MIN_MONTHLY_WATCH_HOURS,
   minimumMonthlyCost,
   monthsToRecoup,
   POST_MONETIZATION_COSTS,
   SETUP_GATES,
   STARTUP_COSTS,
   USD_KRW_NOTE,
+  watchHourCeiling,
   watchHoursPerView,
   YPP_REQUIREMENTS,
   type RunwayInput,
@@ -138,11 +141,15 @@ describe('calcRunway — 현실적인 소규모 채널', () => {
     expect(r.bottleneck).toBe('subscribers');
   });
 
-  it('★ 12개월을 넘기면 시청시간 만료를 경고한다', () => {
+  it('★ 이 속도로는 시청시간 상한에 걸려 아예 도달할 수 없다', () => {
+    // 예전에는 "12개월 넘으면 만료될 수 있다"고 경고만 했다.
+    // 실은 상한이 4,000시간에 못 미치므로 기다려도 못 채운다.
     const verySmall = { ...small, videosPerMonth: 2, viewsPerVideo: 100 };
     const r = calcRunway(verySmall);
-    expect(r.monthsToWatchHours!).toBeGreaterThan(12);
-    expect(r.blocker).toMatch(/만료/);
+    expect(r.watchHourCeiling).toBeLessThan(4000);
+    expect(r.watchHoursUnreachable).toBe(true);
+    expect(r.monthsToWatchHours).toBeNull();
+    expect(r.blocker).toMatch(/채울 수 없습니다/);
   });
 
   it('누적 지출이 크게 늘어난다', () => {
@@ -230,6 +237,125 @@ describe('monthsToRecoup — 투자 회수', () => {
 
   it('지출이 0이면 0개월이다', () => {
     expect(monthsToRecoup(0, 100000)).toBe(0);
+  });
+});
+
+describe('★ 시청시간 12개월 상한 — 수학적 한계', () => {
+  // 시청시간은 최근 12개월만 집계된다. 매월 r시간씩 쌓으면 12개월째에
+  // r×12가 되고, 그 뒤로는 가장 오래된 달이 떨어져 나가 더 늘지 않는다.
+  // 즉 r×12 < 4,000이면 기다려도 절대 못 채운다. 경고가 아니라 상한이다.
+
+  it('최소 월 시청시간이 요건을 창 길이로 나눈 값이다', () => {
+    // 4,000 / 12 = 333.33...
+    expect(MIN_MONTHLY_WATCH_HOURS).toBeCloseTo(4000 / 12, 5);
+  });
+
+  it('상한은 월 시청시간의 12배다', () => {
+    expect(watchHourCeiling(300)).toBe(3600);
+    expect(watchHourCeiling(500)).toBe(6000);
+  });
+
+  it('음수를 0으로 처리한다', () => {
+    expect(watchHourCeiling(-100)).toBe(0);
+  });
+
+  it('★ 월 333시간 미만이면 도달 불가로 판정한다', () => {
+    expect(canReachWatchHours(333)).toBe(false);
+    expect(canReachWatchHours(334)).toBe(true);
+  });
+
+  it('경계에서 정확히 판정한다', () => {
+    expect(canReachWatchHours(MIN_MONTHLY_WATCH_HOURS)).toBe(true);
+    expect(canReachWatchHours(MIN_MONTHLY_WATCH_HOURS - 0.01)).toBe(false);
+  });
+
+  it('★ 상한에 걸리면 monthsToWatchHours가 null이다', () => {
+    // 월 2편 × 100조회 × 0.4시간 = 80시간/월 → 상한 960시간
+    const r = calcRunway({
+      ...base,
+      videosPerMonth: 2,
+      viewsPerVideo: 100,
+      retentionPercent: 20,
+    });
+    expect(r.monthlyWatchHours).toBe(80);
+    expect(r.watchHourCeiling).toBe(960);
+    expect(r.watchHoursUnreachable).toBe(true);
+    // 예전 코드는 여기서 12개월이라는 숫자를 냈다. 그건 틀렸다
+    expect(r.monthsToWatchHours).toBeNull();
+    expect(r.monthsToMonetized).toBeNull();
+  });
+
+  it('★ 상한 초과 시 "기다려도 못 채운다"고 말한다', () => {
+    const r = calcRunway({
+      ...base,
+      videosPerMonth: 2,
+      viewsPerVideo: 100,
+      retentionPercent: 20,
+    });
+    expect(r.blocker).toMatch(/채울 수 없습니다/);
+    expect(r.blocker).toMatch(/기다려도/);
+    // 상한값과 필요한 월 시청시간을 알려줘야 실행 가능한 조언이 된다
+    expect(r.blocker).toMatch(/960/);
+    expect(r.blocker).toMatch(/334/);
+  });
+
+  it('★ 상한을 살짝 넘으면 도달 가능으로 바뀐다', () => {
+    // 월 340시간 → 상한 4,080시간. 4,000을 넘는다
+    // 8편 × 250조회 × 0.17시간 = 340
+    const r = calcRunway({
+      ...base,
+      videosPerMonth: 8,
+      viewsPerVideo: 250,
+      runtimeMinutes: 120,
+      retentionPercent: 8.5,
+    });
+    expect(r.monthlyWatchHours).toBeCloseTo(340, 0);
+    expect(r.watchHoursUnreachable).toBe(false);
+    expect(r.monthsToWatchHours).not.toBeNull();
+  });
+
+  it('★ 12개월의 75%를 넘으면 여유 없다고 경고한다', () => {
+    // 도달은 하지만 상한에 가까운 경우
+    const r = calcRunway({
+      ...base,
+      videosPerMonth: 8,
+      viewsPerVideo: 250,
+      retentionPercent: 8.5,
+    });
+    expect(r.monthsToWatchHours!).toBeGreaterThan(9);
+    expect(r.blocker).toMatch(/여유가 없습니다/);
+  });
+
+  it('여유가 충분하면 시청시간 경고가 없다', () => {
+    const r = calcRunway(base);
+    expect(r.monthsToWatchHours).toBe(1);
+    expect(r.watchHoursUnreachable).toBe(false);
+    // 경고가 없으면 blocker는 null이다
+    expect(r.blocker).toBeNull();
+  });
+
+  it('★ 이미 시청시간을 채웠으면 상한과 무관하다', () => {
+    // 요건을 이미 넘었으면 느린 속도라도 문제없다
+    const r = calcRunway({
+      ...base,
+      videosPerMonth: 2,
+      viewsPerVideo: 100,
+      retentionPercent: 20,
+      currentWatchHours: 5000,
+      currentSubscribers: 1500,
+    });
+    expect(r.watchHoursUnreachable).toBe(false);
+    expect(r.monthsToWatchHours).toBe(0);
+    expect(r.monthsToMonetized).toBe(1);
+  });
+
+  it('상한 정보가 항상 결과에 담긴다', () => {
+    for (const v of [0, 1, 8, 100]) {
+      const r = calcRunway({ ...base, videosPerMonth: v });
+      expect(typeof r.watchHourCeiling).toBe('number');
+      expect(Number.isFinite(r.watchHourCeiling)).toBe(true);
+      expect(typeof r.watchHoursUnreachable).toBe('boolean');
+    }
   });
 });
 
