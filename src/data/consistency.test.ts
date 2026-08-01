@@ -2,7 +2,14 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, sep as SEP } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PHASES, STEPS } from './steps';
-import { SETUP_GATES, SETUP_GATE_COUNT } from '../lib/runway';
+import { TOOLS } from './tools';
+import {
+  calcRunway,
+  fullMonthlyCost,
+  POST_MONETIZATION_COSTS,
+  SETUP_GATES,
+  SETUP_GATE_COUNT,
+} from '../lib/runway';
 
 /**
  * 문구와 데이터가 어긋나는 것을 막는 검사.
@@ -139,6 +146,102 @@ describe('문구와 데이터 일관성 — 그 외', () => {
       const g = SETUP_GATES.find((x) => x.id === id);
       expect(g, `관문 ${id}이 없습니다`).toBeDefined();
       expect(g?.source, `${id}에 출처가 없습니다`).toMatch(/^https:\/\/support\.google\.com/);
+    }
+  });
+});
+
+describe('Grok 가격 일관성', () => {
+  it('★ tools.ts의 Grok이 SuperGrok $30으로 표기돼 있다', () => {
+    expect(TOOLS.grok.plan).toContain('SuperGrok');
+    expect(TOOLS.grok.plan).toContain('$30');
+    expect(TOOLS.grok.monthlyCostKrw).toBe(42000);
+  });
+
+  it('★ steps.ts에 X Premium+ $40 가격이 없다', () => {
+    // SuperGrok $30이 올바른 플랜이다. $40은 X Premium+(X 앱용)이라 사용자를 잘못 유도한다.
+    const bad = findLines(SOURCES, (l) =>
+      /\$40.*월/.test(l) && /Grok|Premium\+/.test(l) && !/X Premium\+.*\(\$40\).*영상 제작에는/.test(l)
+    );
+    expect(bad, `SuperGrok $30으로 통일하세요:\n${bad.join('\n')}`).toEqual([]);
+  });
+
+  it('★ steps.ts keyPoint의 합계가 fullMonthlyCost()에 근접한다', () => {
+    const cost = fullMonthlyCost();
+    const step = STEPS.find((s) => s.id === 'setup-tools');
+    expect(step).toBeDefined();
+    // "Grok을 추가하면 약 10만원" 부분이 fullMonthlyCost와 근접해야 한다
+    const match = step!.keyPoint?.match(/Grok을 추가하면 약\s*(\d+)만원/);
+    if (match) {
+      const stated = Number(match[1]) * 10000;
+      expect(Math.abs(stated - cost)).toBeLessThan(20000);
+    }
+  });
+});
+
+describe('judgment steps 표기', () => {
+  it('★ 소스 코드에 판단 지점 수를 한글 수사로 하드코딩한 곳이 없다', () => {
+    // "여섯 곳만 직접 정하면" 같은 표기는 judgmentSteps.length와 어긋날 수 있다
+    // "두 곳 모두 표기" 같은 건 YouTube 설정 안내이므로 제외한다
+    const numerals = '(다섯|여섯|일곱|여덟|아홉|열)';
+    const bad = findLines(SOURCES, (l) => new RegExp(`${numerals}\\s*곳`).test(l));
+    expect(bad, `judgmentSteps.length를 쓰세요:\n${bad.join('\n')}`).toEqual([]);
+  });
+});
+
+describe('POST_MONETIZATION_COSTS 근거', () => {
+  it('★ 모든 항목에 source 필드가 있다', () => {
+    for (const item of POST_MONETIZATION_COSTS) {
+      expect(item.source, `${item.label}에 source가 없습니다`).toBeTruthy();
+    }
+  });
+
+  it('★ 추정 항목은 note 또는 source에 "추정"이 명시돼 있다', () => {
+    for (const item of POST_MONETIZATION_COSTS) {
+      const hasEstimateMarker =
+        (item.note && item.note.includes('추정')) ||
+        (item.source && item.source.includes('추정'));
+      expect(hasEstimateMarker, `${item.label}: 추정인지 명시 안 됨`).toBe(true);
+    }
+  });
+});
+
+describe('구독자 blocker', () => {
+  it('★ 구독자 요건 36개월 초과 시 blocker가 발생한다', () => {
+    // 구독 전환율을 극단적으로 낮춰 구독자 요건이 36개월을 넘게 만든다
+    const result = calcRunway({
+      videosPerMonth: 4,
+      runtimeMinutes: 120,
+      viewsPerVideo: 500,
+      retentionPercent: 25,
+      subscribeRatePercent: 0.05,
+      monthlyCostKrw: 99000,
+      costPerVideoKrw: 1500,
+      currentSubscribers: 0,
+      currentWatchHours: 0,
+    });
+    // 시청시간이 12개월 이내라도 구독자가 36개월 초과면 blocker
+    if (result.monthsToSubscribers && result.monthsToSubscribers > 36) {
+      expect(result.blocker).not.toBeNull();
+      expect(result.blocker).toContain('구독자');
+    }
+  });
+
+  it('구독자 요건 36개월 이내면 blocker가 아니다', () => {
+    const result = calcRunway({
+      videosPerMonth: 20,
+      runtimeMinutes: 120,
+      viewsPerVideo: 5000,
+      retentionPercent: 25,
+      subscribeRatePercent: 0.5,
+      monthlyCostKrw: 99000,
+      costPerVideoKrw: 1500,
+      currentSubscribers: 0,
+      currentWatchHours: 0,
+    });
+    // 이 조건이면 구독자 요건이 36개월 이내일 수 있다
+    if (result.monthsToSubscribers && result.monthsToSubscribers <= 36 &&
+        result.monthsToWatchHours && result.monthsToWatchHours <= 12) {
+      expect(result.blocker).toBeNull();
     }
   });
 });

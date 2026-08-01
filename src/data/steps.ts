@@ -299,10 +299,10 @@ export const STEPS: Step[] = [
     tools: ['claude', 'grok', 'vrew', 'flow', 'miricanvas'],
     duration: '20분',
     keyPoint:
-      '최소 구성은 월 약 6만원(Claude + Vrew). Grok을 추가하면 약 11만원. 영상 1개 제작 원가는 1,000~2,000원. 무료 도구는 언제 유료로 바뀔지 모르니 시작을 미루지 말 것.',
+      '최소 구성은 월 약 6만원(Claude + Vrew). Grok을 추가하면 약 10만원. 영상 1개 제작 원가는 1,000~2,000원. 무료 도구는 언제 유료로 바뀔지 모르니 시작을 미루지 말 것.',
     actions: [
       'Claude(claude.ai) 가입 후 Pro($20/월) 결제. 모델은 Sonnet을 쓴다.',
-      'Grok(grok.com) 결제(X Premium+ $40/월, 약 55,000원) — 인트로 영상용. 정지 이미지로 대체하면 생략 가능.',
+      'Grok(grok.com) 결제(SuperGrok $30/월, 약 42,000원) — 인트로 영상용. 정지 이미지로 대체하면 생략 가능.',
       'Vrew(vrew.ai) Standard(29,000원/월) 결제 — TTS와 편집용. 월 4편 기준 Standard 이상 필요(Light는 글자 수 부족).',
       'Google Flow(labs.google/flow)는 구글 계정으로 로그인만 하면 무료.',
       '미리캔버스도 무료 가입.',
@@ -311,8 +311,8 @@ export const STEPS: Step[] = [
       { id: 'claude', label: 'Claude Pro 결제 완료 (모델: Sonnet)' },
       {
         id: 'grok',
-        label: 'Grok 결제 완료 (X Premium+ $40/월)',
-        warning: '2025년 2월부터 $40/월(약 55,000원)로 인상됐다. 인트로를 정지 이미지로 대체하면 생략 가능.',
+        label: 'Grok 결제 완료 (SuperGrok $30/월)',
+        warning: 'SuperGrok $30/월(약 42,000원). X Premium+($40)는 X 앱용이고 영상 제작에는 SuperGrok이면 된다. 인트로를 정지 이미지로 대체하면 생략 가능.',
       },
       { id: 'vrew', label: 'Vrew Standard 결제 완료' },
       { id: 'flow', label: 'Google Flow 로그인 확인 (무료)' },

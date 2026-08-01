@@ -156,6 +156,15 @@ export function calcRunway(input: RunwayInput): RunwayResult {
       `이 속도로는 앞서 쌓은 시간이 만료돼 요건을 채우지 못할 수 있습니다.`;
   }
 
+  // 구독자 요건이 36개월(3년) 이상이면 사실상 도달 불가 수준
+  const SUBSCRIBER_BLOCKER_THRESHOLD_MONTHS = 36;
+  if (!blocker && monthsToSubscribers > SUBSCRIBER_BLOCKER_THRESHOLD_MONTHS) {
+    blocker =
+      `구독자 요건까지 ${monthsToSubscribers}개월(약 ${Math.round(monthsToSubscribers / 12)}년)이 걸립니다. ` +
+      `누적 지출이 ${Math.round(sunkCostKrw / 10000).toLocaleString()}만원에 달하며, ` +
+      `이 전환율로는 사실상 도달이 어렵습니다. 구독 전환율을 높이거나 조회수를 늘려야 합니다.`;
+  }
+
   return {
     monthlyWatchHours,
     monthlySubscribers,
@@ -471,6 +480,7 @@ export const POST_MONETIZATION_COSTS: CostItem[] = [
     note: '간편장부 기준 연 11~22만원 (추정). 복식부기 시 상승. 연 1회 발생.',
     optional: true,
     lastVerified: '2026-08',
+    source: '추정. 시중 세무사 비교 견적 기준(간편장부 11~22만원 범위 중간값)',
   },
   {
     label: '환전 손실 + 외화 수취 수수료',
@@ -479,6 +489,7 @@ export const POST_MONETIZATION_COSTS: CostItem[] = [
     note: '수령액의 약 1.5% + 건당 5,000~10,000원 (추정). 은행·수익 규모에 따라 변동.',
     optional: false,
     lastVerified: '2026-08',
+    source: '추정. 시중 은행 외화 수취 수수료 일반 범위(5,000~10,000원/건)',
   },
 ];
 

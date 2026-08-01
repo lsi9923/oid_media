@@ -174,7 +174,7 @@ export function Overview({ onStart }: { onStart: () => void }) {
             사람이 판단할 {judgmentSteps.length}곳
           </h2>
           <p className="ov__note">
-            나머지는 AI가 합니다. 이 여섯 곳만 직접 정하면 됩니다. 정책이 요구하는 "제작자의 관점"도
+            나머지는 AI가 합니다. 이 {judgmentSteps.length}곳만 직접 정하면 됩니다. 정책이 요구하는 "제작자의 관점"도
             여기서 나옵니다.
           </p>
           <ul className="ov__judge">
